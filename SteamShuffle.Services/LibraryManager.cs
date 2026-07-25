@@ -1,9 +1,8 @@
 using System.Net.Http;
-using SteamShuffle.Models;
+using SteamShuffle.ApiClients;
+using SteamShuffle.CoreModels;
 
 namespace SteamShuffle.Services;
-
-public record LibrarySyncProgress(string Message, int Completed, int Total);
 
 /// <summary>
 /// Top-level orchestration: pull owned games + wishlist from Steam, merge them,
@@ -11,10 +10,10 @@ public record LibrarySyncProgress(string Message, int Completed, int Total);
 /// </summary>
 public class LibraryManager
 {
-    private readonly CollectionRepository _repo;
+    private readonly ICollectionRepository _repo;
     private readonly HttpClient _http;
 
-    public LibraryManager(CollectionRepository repo, HttpClient http)
+    public LibraryManager(ICollectionRepository repo, HttpClient http)
     {
         _repo = repo;
         _http = http;

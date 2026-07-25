@@ -1,9 +1,9 @@
 using System.Net;
-using SteamShuffle.Services;
+using SteamShuffle.ApiClients;
 using SteamShuffle.Tests.TestHelpers;
 using Xunit;
 
-namespace SteamShuffle.Tests.Services;
+namespace SteamShuffle.Tests.ApiClients;
 
 public class SteamStoreServiceTests
 {

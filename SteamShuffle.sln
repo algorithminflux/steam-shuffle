@@ -1,4 +1,4 @@
-
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
@@ -6,6 +6,14 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SteamShuffle", "SteamShuffle\SteamShuffle.csproj", "{B3C1A5E2-4B7A-4F1E-9C2D-1A2B3C4D5E6F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SteamShuffle.Tests", "SteamShuffle.Tests\SteamShuffle.Tests.csproj", "{C4D2B6F3-5C8B-4A2F-8D3E-2B3C4D5E6F70}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SteamShuffle.CoreModels", "SteamShuffle.CoreModels\SteamShuffle.CoreModels.csproj", "{C47652BF-CB3D-465B-8D7F-CE7D5DA45108}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SteamShuffle.ApiClients", "SteamShuffle.ApiClients\SteamShuffle.ApiClients.csproj", "{9CA17CAB-1F66-4E72-BB11-DEC4F445D5F6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SteamShuffle.Infrastructure", "SteamShuffle.Infrastructure\SteamShuffle.Infrastructure.csproj", "{EBB6D2A2-9F55-4E4E-9B99-32CC504ED10A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SteamShuffle.Services", "SteamShuffle.Services\SteamShuffle.Services.csproj", "{407FA695-ED0B-4DF6-AF56-11678D730584}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +29,22 @@ Global
 		{C4D2B6F3-5C8B-4A2F-8D3E-2B3C4D5E6F70}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C4D2B6F3-5C8B-4A2F-8D3E-2B3C4D5E6F70}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C4D2B6F3-5C8B-4A2F-8D3E-2B3C4D5E6F70}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C47652BF-CB3D-465B-8D7F-CE7D5DA45108}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C47652BF-CB3D-465B-8D7F-CE7D5DA45108}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C47652BF-CB3D-465B-8D7F-CE7D5DA45108}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C47652BF-CB3D-465B-8D7F-CE7D5DA45108}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9CA17CAB-1F66-4E72-BB11-DEC4F445D5F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9CA17CAB-1F66-4E72-BB11-DEC4F445D5F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9CA17CAB-1F66-4E72-BB11-DEC4F445D5F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9CA17CAB-1F66-4E72-BB11-DEC4F445D5F6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EBB6D2A2-9F55-4E4E-9B99-32CC504ED10A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EBB6D2A2-9F55-4E4E-9B99-32CC504ED10A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EBB6D2A2-9F55-4E4E-9B99-32CC504ED10A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EBB6D2A2-9F55-4E4E-9B99-32CC504ED10A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{407FA695-ED0B-4DF6-AF56-11678D730584}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{407FA695-ED0B-4DF6-AF56-11678D730584}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{407FA695-ED0B-4DF6-AF56-11678D730584}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{407FA695-ED0B-4DF6-AF56-11678D730584}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

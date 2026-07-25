@@ -1,7 +1,8 @@
 using System.Net.Http;
 using System.Text.Json;
+using SteamShuffle.CoreModels;
 
-namespace SteamShuffle.Services;
+namespace SteamShuffle.ApiClients;
 
 /// <summary>
 /// Fetches store-page metadata (price, genres, categories, header art) from the
@@ -145,21 +146,4 @@ public class SteamStoreService
         }
         _lastCallUtc = DateTime.UtcNow;
     }
-}
-
-public class StoreSearchResult
-{
-    public int AppId { get; set; }
-    public string Name { get; set; } = string.Empty;
-}
-
-public class StoreDetails
-{
-    public int AppId { get; set; }
-    public string? Name { get; set; }
-    public string? HeaderImageUrl { get; set; }
-    public bool IsFree { get; set; }
-    public decimal? PriceCad { get; set; }
-    public List<string> Genres { get; set; } = new();
-    public List<string> Tags { get; set; } = new();
 }

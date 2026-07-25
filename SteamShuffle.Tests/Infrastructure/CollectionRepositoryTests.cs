@@ -1,8 +1,8 @@
-using SteamShuffle.Models;
-using SteamShuffle.Services;
+using SteamShuffle.CoreModels;
+using SteamShuffle.Infrastructure;
 using Xunit;
 
-namespace SteamShuffle.Tests.Services;
+namespace SteamShuffle.Tests.Infrastructure;
 
 public class CollectionRepositoryTests : IDisposable
 {

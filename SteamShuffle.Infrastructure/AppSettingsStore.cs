@@ -1,23 +1,21 @@
 using System.IO;
 using System.Text.Json;
+using SteamShuffle.CoreModels;
 
-namespace SteamShuffle.Services;
+namespace SteamShuffle.Infrastructure;
 
-public class AppSettings
+/// <summary>
+/// Persists <see cref="AppSettings"/> as JSON in %AppData%\SteamShuffle. Kept
+/// separate from the AppSettings data model so the model itself stays a plain
+/// CoreModels type with no file-system dependency.
+/// </summary>
+public static class AppSettingsStore
 {
     private static string SettingsPath =>
         Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "SteamShuffle",
             "settings.json");
-
-    public string SteamApiKey { get; set; } = string.Empty;
-    public string SteamId64 { get; set; } = string.Empty;
-
-    /// <summary>Steam "cc" country code used for store pricing. "ca" = Canada / CAD.</summary>
-    public string CountryCode { get; set; } = "ca";
-
-    public bool IsConfigured => !string.IsNullOrWhiteSpace(SteamApiKey) && !string.IsNullOrWhiteSpace(SteamId64);
 
     public static AppSettings Load()
     {
@@ -41,11 +39,11 @@ public class AppSettings
         return new AppSettings();
     }
 
-    public void Save()
+    public static void Save(AppSettings settings)
     {
         var dir = Path.GetDirectoryName(SettingsPath)!;
         Directory.CreateDirectory(dir);
-        var json = JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
+        var json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
         File.WriteAllText(SettingsPath, json);
     }
 }

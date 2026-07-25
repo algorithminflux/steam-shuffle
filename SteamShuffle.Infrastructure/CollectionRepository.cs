@@ -1,16 +1,16 @@
 using System.IO;
 using System.Text.Json;
 using Microsoft.Data.Sqlite;
-using SteamShuffle.Models;
+using SteamShuffle.CoreModels;
 
-namespace SteamShuffle.Services;
+namespace SteamShuffle.Infrastructure;
 
 /// <summary>
 /// Local SQLite store: a cache of merged game data (owned + wishlist + store
 /// metadata) and the user's own collections. This is the only "database" the
 /// app depends on — nothing here relies on Steam's undocumented local files.
 /// </summary>
-public class CollectionRepository
+public class CollectionRepository : ICollectionRepository
 {
     private readonly string _connectionString;
 

@@ -1,5 +1,6 @@
 using System.Windows;
-using SteamShuffle.Services;
+using SteamShuffle.CoreModels;
+using SteamShuffle.Infrastructure;
 
 namespace SteamShuffle.Views;
 
@@ -41,7 +42,7 @@ public partial class SettingsWindow
         Settings.SteamApiKey = apiKey;
         Settings.SteamId64 = steamId;
         Settings.CountryCode = string.IsNullOrWhiteSpace(countryCode) ? "ca" : countryCode.ToLowerInvariant();
-        Settings.Save();
+        AppSettingsStore.Save(Settings);
 
         Saved = true;
         DialogResult = true;

@@ -1,8 +1,8 @@
 using System.Net.Http;
 using System.Text.Json;
-using SteamShuffle.Models;
+using SteamShuffle.CoreModels;
 
-namespace SteamShuffle.Services;
+namespace SteamShuffle.ApiClients;
 
 /// <summary>
 /// Fetches the user's Steam wishlist.

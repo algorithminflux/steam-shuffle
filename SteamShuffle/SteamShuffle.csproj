@@ -12,7 +12,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.8" />
+    <ProjectReference Include="..\SteamShuffle.ApiClients\SteamShuffle.ApiClients.csproj" />
+    <ProjectReference Include="..\SteamShuffle.CoreModels\SteamShuffle.CoreModels.csproj" />
+    <ProjectReference Include="..\SteamShuffle.Infrastructure\SteamShuffle.Infrastructure.csproj" />
+    <ProjectReference Include="..\SteamShuffle.Services\SteamShuffle.Services.csproj" />
   </ItemGroup>
 
 </Project>

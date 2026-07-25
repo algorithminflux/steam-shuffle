@@ -1,4 +1,4 @@
-namespace SteamShuffle.Models;
+namespace SteamShuffle.CoreModels;
 
 /// <summary>
 /// A single game owned by the user, merged from the Steam Web API (ownership,

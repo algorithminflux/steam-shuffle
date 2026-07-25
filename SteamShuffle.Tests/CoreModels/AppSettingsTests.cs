@@ -1,7 +1,7 @@
-using SteamShuffle.Services;
+using SteamShuffle.CoreModels;
 using Xunit;
 
-namespace SteamShuffle.Tests.Services;
+namespace SteamShuffle.Tests.CoreModels;
 
 public class AppSettingsTests
 {

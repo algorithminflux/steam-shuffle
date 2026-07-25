@@ -1,7 +1,7 @@
-using SteamShuffle.Models;
+using SteamShuffle.CoreModels;
 using Xunit;
 
-namespace SteamShuffle.Tests.Models;
+namespace SteamShuffle.Tests.CoreModels;
 
 public class SteamGameTests
 {

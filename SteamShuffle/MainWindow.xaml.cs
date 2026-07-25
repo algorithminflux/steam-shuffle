@@ -1,7 +1,9 @@
 using System.Collections.ObjectModel;
 using System.Net.Http;
 using System.Windows;
-using SteamShuffle.Models;
+using SteamShuffle.ApiClients;
+using SteamShuffle.CoreModels;
+using SteamShuffle.Infrastructure;
 using SteamShuffle.Services;
 using SteamShuffle.Views;
 
@@ -10,7 +12,7 @@ namespace SteamShuffle;
 public partial class MainWindow
 {
     private readonly HttpClient _http = new();
-    private readonly CollectionRepository _repo = new();
+    private readonly ICollectionRepository _repo = new CollectionRepository();
     private readonly LibraryManager _library;
     private AppSettings _settings;
 
@@ -24,7 +26,7 @@ public partial class MainWindow
     {
         InitializeComponent();
 
-        _settings = AppSettings.Load();
+        _settings = AppSettingsStore.Load();
         _library = new LibraryManager(_repo, _http);
 
         CollectionsList.ItemsSource = _collections;

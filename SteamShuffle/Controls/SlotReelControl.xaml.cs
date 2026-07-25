@@ -3,7 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
-using SteamShuffle.Models;
+using SteamShuffle.CoreModels;
 
 namespace SteamShuffle.Controls;
 

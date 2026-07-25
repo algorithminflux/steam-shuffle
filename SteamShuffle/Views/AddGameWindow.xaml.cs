@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Input;
-using SteamShuffle.Services;
+using SteamShuffle.ApiClients;
+using SteamShuffle.CoreModels;
 
 namespace SteamShuffle.Views;
 

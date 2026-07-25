@@ -1,8 +1,7 @@
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
-using SteamShuffle.Models;
-using SteamShuffle.Services;
+using SteamShuffle.CoreModels;
 
 namespace SteamShuffle.Views;
 
@@ -39,11 +38,11 @@ public class GameSelectionItem : INotifyPropertyChanged
 
 public partial class CollectionManagerWindow : Window
 {
-    private readonly CollectionRepository _repo;
+    private readonly ICollectionRepository _repo;
     private readonly GameCollection _collection;
     private readonly List<GameSelectionItem> _allItems;
 
-    public CollectionManagerWindow(CollectionRepository repo, GameCollection collection, IEnumerable<SteamGame> allGames)
+    public CollectionManagerWindow(ICollectionRepository repo, GameCollection collection, IEnumerable<SteamGame> allGames)
     {
         InitializeComponent();
         _repo = repo;

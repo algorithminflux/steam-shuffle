@@ -1,4 +1,4 @@
-namespace SteamShuffle.Models;
+namespace SteamShuffle.CoreModels;
 
 /// <summary>
 /// A user-managed collection (e.g. "Cozy", "Co-op", "Backlog").
