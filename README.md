@@ -73,8 +73,8 @@ The `SteamShuffle.Tests` project (xUnit) covers:
   own temp SQLite file, so tests don't share state or touch your real library.
 - **`ApiClients/SteamWebApiServiceTests`**, **`SteamWishlistServiceTests`**,
   **`SteamStoreServiceTests`** — JSON parsing against a fake `HttpMessageHandler`
-  (no real network calls), including pagination, the "0 means never played"
-  quirk, free-game price handling, and the privacy-related error messages.
+  (no real network calls), including the "0 means never played" quirk,
+  free-game price handling, and the privacy-related error messages.
 
 ## How it works
 
@@ -100,6 +100,13 @@ The `SteamShuffle.Tests` project (xUnit) covers:
   `%AppData%\SteamShuffle\library.db`. Your API key and SteamID64 live in
   `%AppData%\SteamShuffle\settings.json`. Nothing is sent anywhere except
   directly to Steam's own servers.
+- If a wishlist placeholder name (e.g. "App 619820") is still showing after a
+  sync, the next **Sync Library** keeps retrying that game's store details
+  regardless of the normal 3-day cache window, until a real name comes back.
+- Reel tiles show the library capsule art (tall, matches the tile shape) when
+  available; if a game has no capsule image, the store's wide header banner
+  is shown letterboxed instead of cropped, and if neither loads, the tile
+  falls back to just the game's name.
 
 ## Using it
 
@@ -108,7 +115,10 @@ The `SteamShuffle.Tests` project (xUnit) covers:
    store details older than 3 days.
 2. **+ New** — create a collection (e.g. "Cozy Nights", "Couch Co-op").
 3. Select a collection, click **Manage** — check off any owned or wishlisted
-   game to add it. Wishlist games show a small "Wishlist" badge.
+   game to add it. Wishlist games show a small "Wishlist" badge. Tick
+   **Selected only** to filter the list down to just what's already in the
+   collection, so you don't have to scroll the whole library to see its
+   current membership.
 4. **+ Add Game** — for games the Steam Web API can't see (most commonly
    Family Share titles, which never show up in `GetOwnedGames`), search by
    name, pick the match, and it's added to your library tagged
