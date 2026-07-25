@@ -48,6 +48,19 @@ public class SteamWishlistService
             if (string.IsNullOrWhiteSpace(body) || body.Trim() == "[]")
                 break;
 
+            // A private/invalid profile returns an HTML page with a 200 status
+            // instead of JSON (e.g. a login wall) — treat that as a normal failure.
+            if (body.TrimStart().StartsWith('<'))
+            {
+                if (page == 0)
+                {
+                    throw new InvalidOperationException(
+                        "Could not read wishlist. Make sure the SteamID64 is correct and your " +
+                        "profile's 'Game details' privacy setting is Public.");
+                }
+                break;
+            }
+
             using var doc = JsonDocument.Parse(body);
             if (doc.RootElement.ValueKind != JsonValueKind.Object || doc.RootElement.EnumerateObject().MoveNext() == false)
                 break;
