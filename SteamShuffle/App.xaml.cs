@@ -1,8 +1,5 @@
-using System.Windows;
+namespace SteamShuffle;
 
-namespace SteamShuffle
+public partial class App
 {
-    public partial class App : Application
-    {
-    }
 }
