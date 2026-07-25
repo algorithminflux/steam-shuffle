@@ -28,7 +28,10 @@ public partial class SlotReelControl
     /// </summary>
     public void Spin(IReadOnlyList<SteamGame> pool, SteamGame winner)
     {
-        if (pool.Count == 0) return;
+        if (pool.Count == 0)
+        {
+            return;
+        }
 
         ReelStrip.Children.Clear();
 

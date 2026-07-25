@@ -18,6 +18,8 @@ public partial class MainWindow
     private readonly ObservableCollection<GameCollection> _collections = [];
     private readonly Random _rng = new();
 
+    private GameCollection? SelectedCollection => CollectionsList.SelectedItem as GameCollection;
+
     public MainWindow()
     {
         InitializeComponent();
@@ -57,8 +59,6 @@ public partial class MainWindow
         foreach (var c in _repo.GetCollections())
             _collections.Add(c);
     }
-
-    private GameCollection? SelectedCollection => CollectionsList.SelectedItem as GameCollection;
 
     private void CollectionsList_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
     {
@@ -100,6 +100,39 @@ public partial class MainWindow
             _collections.Add(c);
     }
 
+    // ReSharper disable once AsyncVoidEventHandlerMethod
+    private async void AddGame_Click(object sender, RoutedEventArgs e)
+    {
+        var storeService = new SteamStoreService(_http, _settings.CountryCode);
+        var dialog = new AddGameWindow(storeService) { Owner = this };
+
+        if (dialog.ShowDialog() != true || dialog.SelectedResult is not { } selected)
+        {
+            return;
+        }
+
+        StatusText.Text = "Adding game...";
+        try
+        {
+            var details = await storeService.GetAppDetailsAsync(selected.AppId);
+            var name = details?.Name ?? selected.Name;
+
+            _repo.UpsertGames([new SteamGame { AppId = selected.AppId, Name = name, IsOwned = true, IsManual = true }]);
+            if (details is not null)
+            {
+                _repo.SaveStoreDetails(details);
+            }
+
+            _allGames = _repo.GetAllGames();
+            StatusText.Text = $"Added \"{name}\". Use \"Manage\" to add it to a collection.";
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, ex.Message, "Add game failed", MessageBoxButton.OK, MessageBoxImage.Error);
+            StatusText.Text = $"{_allGames.Count} games cached locally.";
+        }
+    }
+
     private void Settings_Click(object sender, RoutedEventArgs e) => OpenSettings();
 
     private void OpenSettings()
@@ -117,7 +150,10 @@ public partial class MainWindow
         if (!_settings.IsConfigured)
         {
             OpenSettings();
-            if (!_settings.IsConfigured) return;
+            if (!_settings.IsConfigured)
+            {
+                return;
+            }
         }
 
         await SyncLibraryAsync();

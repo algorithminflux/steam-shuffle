@@ -34,47 +34,6 @@ public class CollectionRepository
         Initialize();
     }
 
-    private SqliteConnection Open()
-    {
-        var conn = new SqliteConnection(_connectionString);
-        conn.Open();
-        return conn;
-    }
-
-    private void Initialize()
-    {
-        using var conn = Open();
-        using var cmd = conn.CreateCommand();
-        cmd.CommandText = """
-                          CREATE TABLE IF NOT EXISTS games (
-                              app_id INTEGER PRIMARY KEY,
-                              name TEXT NOT NULL,
-                              playtime_minutes INTEGER NOT NULL DEFAULT 0,
-                              last_played_unix INTEGER NULL,
-                              is_owned INTEGER NOT NULL DEFAULT 0,
-                              is_wishlisted INTEGER NOT NULL DEFAULT 0,
-                              header_image_url TEXT NULL,
-                              is_free INTEGER NOT NULL DEFAULT 0,
-                              price_cad REAL NULL,
-                              genres_json TEXT NULL,
-                              tags_json TEXT NULL,
-                              store_fetched_at_unix INTEGER NULL
-                          );
-
-                          CREATE TABLE IF NOT EXISTS collections (
-                              id INTEGER PRIMARY KEY AUTOINCREMENT,
-                              name TEXT NOT NULL UNIQUE
-                          );
-
-                          CREATE TABLE IF NOT EXISTS collection_games (
-                              collection_id INTEGER NOT NULL REFERENCES collections(id) ON DELETE CASCADE,
-                              app_id INTEGER NOT NULL,
-                              PRIMARY KEY (collection_id, app_id)
-                          );
-                          """;
-        cmd.ExecuteNonQuery();
-    }
-
     // ---------- Games cache ----------
 
     /// <summary>
@@ -93,14 +52,15 @@ public class CollectionRepository
             using var cmd = conn.CreateCommand();
             cmd.Transaction = tx;
             cmd.CommandText = """
-                              INSERT INTO games (app_id, name, playtime_minutes, last_played_unix, is_owned, is_wishlisted)
-                              VALUES ($appId, $name, $playtime, $lastPlayed, $isOwned, $isWishlisted)
+                              INSERT INTO games (app_id, name, playtime_minutes, last_played_unix, is_owned, is_wishlisted, is_manual)
+                              VALUES ($appId, $name, $playtime, $lastPlayed, $isOwned, $isWishlisted, $isManual)
                               ON CONFLICT(app_id) DO UPDATE SET
                                   name = excluded.name,
                                   playtime_minutes = MAX(games.playtime_minutes, excluded.playtime_minutes),
                                   last_played_unix = COALESCE(excluded.last_played_unix, games.last_played_unix),
                                   is_owned = MAX(games.is_owned, excluded.is_owned),
-                                  is_wishlisted = MAX(games.is_wishlisted, excluded.is_wishlisted);
+                                  is_wishlisted = MAX(games.is_wishlisted, excluded.is_wishlisted),
+                                  is_manual = MAX(games.is_manual, excluded.is_manual);
                               """;
             cmd.Parameters.AddWithValue("$appId", game.AppId);
             cmd.Parameters.AddWithValue("$name", game.Name);
@@ -108,6 +68,7 @@ public class CollectionRepository
             cmd.Parameters.AddWithValue("$lastPlayed", (object?)game.LastPlayed?.ToUnixTimeSeconds() ?? DBNull.Value);
             cmd.Parameters.AddWithValue("$isOwned", game.IsOwned ? 1 : 0);
             cmd.Parameters.AddWithValue("$isWishlisted", game.IsWishlisted ? 1 : 0);
+            cmd.Parameters.AddWithValue("$isManual", game.IsManual ? 1 : 0);
             cmd.ExecuteNonQuery();
         }
 
@@ -166,42 +127,6 @@ public class CollectionRepository
         while (reader.Read())
             ids.Add(reader.GetInt32(0));
         return ids;
-    }
-
-    private static SteamGame ReadGame(SqliteDataReader reader)
-    {
-        var game = new SteamGame
-        {
-            AppId = reader.GetInt32(reader.GetOrdinal("app_id")),
-            Name = reader.GetString(reader.GetOrdinal("name")),
-            PlaytimeForeverMinutes = reader.GetInt32(reader.GetOrdinal("playtime_minutes")),
-            IsOwned = reader.GetInt32(reader.GetOrdinal("is_owned")) == 1,
-            IsWishlisted = reader.GetInt32(reader.GetOrdinal("is_wishlisted")) == 1,
-        };
-
-        var lastPlayedOrdinal = reader.GetOrdinal("last_played_unix");
-        if (!reader.IsDBNull(lastPlayedOrdinal))
-            game.LastPlayed = DateTimeOffset.FromUnixTimeSeconds(reader.GetInt64(lastPlayedOrdinal));
-
-        var headerOrdinal = reader.GetOrdinal("header_image_url");
-        if (!reader.IsDBNull(headerOrdinal))
-            game.HeaderImageUrl = reader.GetString(headerOrdinal);
-
-        game.IsFree = reader.GetInt32(reader.GetOrdinal("is_free")) == 1;
-
-        var priceOrdinal = reader.GetOrdinal("price_cad");
-        if (!reader.IsDBNull(priceOrdinal))
-            game.PriceCad = (decimal)reader.GetDouble(priceOrdinal);
-
-        var genresOrdinal = reader.GetOrdinal("genres_json");
-        if (!reader.IsDBNull(genresOrdinal))
-            game.Genres = JsonSerializer.Deserialize<List<string>>(reader.GetString(genresOrdinal)) ?? new();
-
-        var tagsOrdinal = reader.GetOrdinal("tags_json");
-        if (!reader.IsDBNull(tagsOrdinal))
-            game.Tags = JsonSerializer.Deserialize<List<string>>(reader.GetString(tagsOrdinal)) ?? new();
-
-        return game;
     }
 
     // ---------- Collections ----------
@@ -276,6 +201,119 @@ public class CollectionRepository
         cmd.Parameters.AddWithValue("$cid", collectionId);
         cmd.Parameters.AddWithValue("$appId", appId);
         cmd.ExecuteNonQuery();
+    }
+
+    // ---------- Internals ----------
+
+    private SqliteConnection Open()
+    {
+        var conn = new SqliteConnection(_connectionString);
+        conn.Open();
+        return conn;
+    }
+
+    private void Initialize()
+    {
+        using var conn = Open();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+                          CREATE TABLE IF NOT EXISTS games (
+                              app_id INTEGER PRIMARY KEY,
+                              name TEXT NOT NULL,
+                              playtime_minutes INTEGER NOT NULL DEFAULT 0,
+                              last_played_unix INTEGER NULL,
+                              is_owned INTEGER NOT NULL DEFAULT 0,
+                              is_wishlisted INTEGER NOT NULL DEFAULT 0,
+                              header_image_url TEXT NULL,
+                              is_free INTEGER NOT NULL DEFAULT 0,
+                              price_cad REAL NULL,
+                              genres_json TEXT NULL,
+                              tags_json TEXT NULL,
+                              store_fetched_at_unix INTEGER NULL
+                          );
+
+                          CREATE TABLE IF NOT EXISTS collections (
+                              id INTEGER PRIMARY KEY AUTOINCREMENT,
+                              name TEXT NOT NULL UNIQUE
+                          );
+
+                          CREATE TABLE IF NOT EXISTS collection_games (
+                              collection_id INTEGER NOT NULL REFERENCES collections(id) ON DELETE CASCADE,
+                              app_id INTEGER NOT NULL,
+                              PRIMARY KEY (collection_id, app_id)
+                          );
+                          """;
+        cmd.ExecuteNonQuery();
+
+        // Added after the initial schema, so existing databases need a migration
+        // rather than relying on CREATE TABLE IF NOT EXISTS.
+        using var pragmaCmd = conn.CreateCommand();
+        pragmaCmd.CommandText = "PRAGMA table_info(games);";
+        using var pragmaReader = pragmaCmd.ExecuteReader();
+        var hasIsManual = false;
+        while (pragmaReader.Read())
+        {
+            if (pragmaReader.GetString(pragmaReader.GetOrdinal("name")) == "is_manual")
+            {
+                hasIsManual = true;
+                break;
+            }
+        }
+        pragmaReader.Close();
+
+        if (!hasIsManual)
+        {
+            using var alterCmd = conn.CreateCommand();
+            alterCmd.CommandText = "ALTER TABLE games ADD COLUMN is_manual INTEGER NOT NULL DEFAULT 0;";
+            alterCmd.ExecuteNonQuery();
+        }
+    }
+
+    private static SteamGame ReadGame(SqliteDataReader reader)
+    {
+        var game = new SteamGame
+        {
+            AppId = reader.GetInt32(reader.GetOrdinal("app_id")),
+            Name = reader.GetString(reader.GetOrdinal("name")),
+            PlaytimeForeverMinutes = reader.GetInt32(reader.GetOrdinal("playtime_minutes")),
+            IsOwned = reader.GetInt32(reader.GetOrdinal("is_owned")) == 1,
+            IsWishlisted = reader.GetInt32(reader.GetOrdinal("is_wishlisted")) == 1,
+            IsManual = reader.GetInt32(reader.GetOrdinal("is_manual")) == 1,
+        };
+
+        var lastPlayedOrdinal = reader.GetOrdinal("last_played_unix");
+        if (!reader.IsDBNull(lastPlayedOrdinal))
+        {
+            game.LastPlayed = DateTimeOffset.FromUnixTimeSeconds(reader.GetInt64(lastPlayedOrdinal));
+        }
+
+        var headerOrdinal = reader.GetOrdinal("header_image_url");
+        if (!reader.IsDBNull(headerOrdinal))
+        {
+            game.HeaderImageUrl = reader.GetString(headerOrdinal);
+        }
+
+        game.IsFree = reader.GetInt32(reader.GetOrdinal("is_free")) == 1;
+
+        var priceOrdinal = reader.GetOrdinal("price_cad");
+        if (!reader.IsDBNull(priceOrdinal))
+        {
+            game.PriceCad = (decimal)reader.GetDouble(priceOrdinal);
+        }
+
+        var genresOrdinal = reader.GetOrdinal("genres_json");
+        if (!reader.IsDBNull(genresOrdinal))
+        {
+            game.Genres = JsonSerializer.Deserialize<List<string>>(reader.GetString(genresOrdinal)) ?? new();
+        }
+
+        var tagsOrdinal = reader.GetOrdinal("tags_json");
+        if (!reader.IsDBNull(tagsOrdinal))
+        {
+            game.Tags = JsonSerializer.Deserialize<List<string>>(reader.GetString(tagsOrdinal)) ?? new();
+        }
+
+        return game;
     }
 
     private List<int> GetAppIdsInCollection(int collectionId)

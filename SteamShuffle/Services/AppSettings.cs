@@ -5,17 +5,19 @@ namespace SteamShuffle.Services;
 
 public class AppSettings
 {
+    private static string SettingsPath =>
+        Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "SteamShuffle",
+            "settings.json");
+
     public string SteamApiKey { get; set; } = string.Empty;
     public string SteamId64 { get; set; } = string.Empty;
 
     /// <summary>Steam "cc" country code used for store pricing. "ca" = Canada / CAD.</summary>
     public string CountryCode { get; set; } = "ca";
 
-    private static string SettingsPath =>
-        Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "SteamShuffle",
-            "settings.json");
+    public bool IsConfigured => !string.IsNullOrWhiteSpace(SteamApiKey) && !string.IsNullOrWhiteSpace(SteamId64);
 
     public static AppSettings Load()
     {
@@ -25,7 +27,10 @@ public class AppSettings
             {
                 var json = File.ReadAllText(SettingsPath);
                 var loaded = JsonSerializer.Deserialize<AppSettings>(json);
-                if (loaded is not null) return loaded;
+                if (loaded is not null)
+                {
+                    return loaded;
+                }
             }
         }
         catch
@@ -43,6 +48,4 @@ public class AppSettings
         var json = JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
         File.WriteAllText(SettingsPath, json);
     }
-
-    public bool IsConfigured => !string.IsNullOrWhiteSpace(SteamApiKey) && !string.IsNullOrWhiteSpace(SteamId64);
 }

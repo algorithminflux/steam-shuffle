@@ -61,7 +61,9 @@ public class LibraryManager
 
             var details = await storeService.GetAppDetailsAsync(staleIds[i], ct);
             if (details is not null)
+            {
                 _repo.SaveStoreDetails(details);
+            }
         }
 
         return _repo.GetAllGames();

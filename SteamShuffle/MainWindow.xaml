@@ -26,7 +26,8 @@
 
             <StackPanel Orientation="Horizontal" Grid.Row="1" Margin="0,0,0,12">
                 <Button Content="+ New" Style="{StaticResource SecondaryButton}" Padding="10,6" Click="NewCollection_Click" Margin="0,0,6,0" />
-                <Button Content="Manage" Style="{StaticResource SecondaryButton}" Padding="10,6" Click="ManageCollection_Click" />
+                <Button Content="Manage" Style="{StaticResource SecondaryButton}" Padding="10,6" Click="ManageCollection_Click" Margin="0,0,6,0" />
+                <Button Content="+ Add Game" Style="{StaticResource SecondaryButton}" Padding="10,6" Click="AddGame_Click" />
             </StackPanel>
 
             <ListBox x:Name="CollectionsList" Grid.Row="2" SelectionChanged="CollectionsList_SelectionChanged">

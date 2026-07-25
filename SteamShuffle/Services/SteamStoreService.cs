@@ -36,7 +36,9 @@ public class SteamStoreService
         using var response = await _http.GetAsync(url, ct);
 
         if (!response.IsSuccessStatusCode)
+        {
             return null;
+        }
 
         var body = await response.Content.ReadAsStringAsync(ct);
         using var doc = JsonDocument.Parse(body);
@@ -51,11 +53,20 @@ public class SteamStoreService
 
         var details = new StoreDetails { AppId = appId };
 
+        if (data.TryGetProperty("name", out var nameEl))
+        {
+            details.Name = nameEl.GetString();
+        }
+
         if (data.TryGetProperty("header_image", out var headerEl))
+        {
             details.HeaderImageUrl = headerEl.GetString();
+        }
 
         if (data.TryGetProperty("is_free", out var freeEl))
+        {
             details.IsFree = freeEl.GetBoolean();
+        }
 
         if (!details.IsFree && data.TryGetProperty("price_overview", out var priceEl) &&
             priceEl.TryGetProperty("final", out var finalEl))
@@ -69,7 +80,9 @@ public class SteamStoreService
             foreach (var g in genresEl.EnumerateArray())
             {
                 if (g.TryGetProperty("description", out var descEl) && descEl.GetString() is { } desc)
+                {
                     details.Genres.Add(desc);
+                }
             }
         }
 
@@ -78,25 +91,72 @@ public class SteamStoreService
             foreach (var c in categoriesEl.EnumerateArray())
             {
                 if (c.TryGetProperty("description", out var descEl) && descEl.GetString() is { } desc)
+                {
                     details.Tags.Add(desc);
+                }
             }
         }
 
         return details;
     }
 
+    /// <summary>
+    /// Looks up candidate games by name via the storefront's public search-suggest
+    /// endpoint, so users can find a game without knowing its numeric App ID.
+    /// </summary>
+    public async Task<List<StoreSearchResult>> SearchAsync(string term, CancellationToken ct = default)
+    {
+        await ThrottleAsync(ct);
+
+        var url = $"https://store.steampowered.com/api/storesearch/?term={Uri.EscapeDataString(term)}&cc={_countryCode}&l=english";
+        using var response = await _http.GetAsync(url, ct);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            return [];
+        }
+
+        var body = await response.Content.ReadAsStringAsync(ct);
+        using var doc = JsonDocument.Parse(body);
+
+        if (!doc.RootElement.TryGetProperty("items", out var itemsEl))
+        {
+            return [];
+        }
+
+        var results = new List<StoreSearchResult>();
+        foreach (var item in itemsEl.EnumerateArray())
+        {
+            if (item.TryGetProperty("id", out var idEl) && item.TryGetProperty("name", out var nameEl) && nameEl.GetString() is { } name)
+            {
+                results.Add(new StoreSearchResult { AppId = idEl.GetInt32(), Name = name });
+            }
+        }
+
+        return results;
+    }
+
     private async Task ThrottleAsync(CancellationToken ct)
     {
         var elapsed = DateTime.UtcNow - _lastCallUtc;
         if (elapsed < MinInterval)
+        {
             await Task.Delay(MinInterval - elapsed, ct);
+        }
         _lastCallUtc = DateTime.UtcNow;
     }
+}
+
+public class StoreSearchResult
+{
+    public int AppId { get; set; }
+    public string Name { get; set; } = string.Empty;
 }
 
 public class StoreDetails
 {
     public int AppId { get; set; }
+    public string? Name { get; set; }
     public string? HeaderImageUrl { get; set; }
     public bool IsFree { get; set; }
     public decimal? PriceCad { get; set; }

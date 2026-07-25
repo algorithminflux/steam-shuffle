@@ -16,7 +16,12 @@ public class SteamGame
     public bool IsOwned { get; set; }
     public bool IsWishlisted { get; set; }
 
+    // Added by hand (e.g. Family Share games, which the Steam Web API never
+    // reports as owned by this account) rather than pulled from a sync.
+    public bool IsManual { get; set; }
+
     public string SourceBadge =>
+        IsManual ? "Family/Manual" :
         IsOwned && IsWishlisted ? "Owned + Wishlist" :
         IsWishlisted ? "Wishlist" :
         "Owned";

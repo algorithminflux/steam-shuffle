@@ -28,6 +28,9 @@
                             <Border Background="#2A3B4D" CornerRadius="4" Padding="6,2" Margin="8,0,0,0" Visibility="{Binding WishlistBadgeVisibility}">
                                 <TextBlock Text="Wishlist" FontSize="10" Foreground="#8FCBEE" />
                             </Border>
+                            <Border Background="#3D2A4D" CornerRadius="4" Padding="6,2" Margin="8,0,0,0" Visibility="{Binding ManualBadgeVisibility}">
+                                <TextBlock Text="Family/Manual" FontSize="10" Foreground="#D6A8F0" />
+                            </Border>
                         </StackPanel>
                     </CheckBox>
                 </DataTemplate>

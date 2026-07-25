@@ -46,7 +46,9 @@ public class SteamWishlistService
 
             // Steam returns "[]" (an empty JSON array) once you've paged past the end.
             if (string.IsNullOrWhiteSpace(body) || body.Trim() == "[]")
+            {
                 break;
+            }
 
             // A private/invalid profile returns an HTML page with a 200 status
             // instead of JSON (e.g. a login wall) — treat that as a normal failure.
@@ -63,12 +65,16 @@ public class SteamWishlistService
 
             using var doc = JsonDocument.Parse(body);
             if (doc.RootElement.ValueKind != JsonValueKind.Object || doc.RootElement.EnumerateObject().MoveNext() == false)
+            {
                 break;
+            }
 
             foreach (var entry in doc.RootElement.EnumerateObject())
             {
                 if (!int.TryParse(entry.Name, out var appId))
+                {
                     continue;
+                }
 
                 var name = entry.Value.TryGetProperty("name", out var nameEl)
                     ? nameEl.GetString() ?? $"App {appId}"

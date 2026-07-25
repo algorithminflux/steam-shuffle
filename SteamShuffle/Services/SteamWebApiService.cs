@@ -57,7 +57,9 @@ public class SteamWebApiService
             {
                 var unix = lastPlayedEl.GetInt64();
                 if (unix > 0)
+                {
                     lastPlayed = DateTimeOffset.FromUnixTimeSeconds(unix);
+                }
             }
 
             games.Add(new SteamGame
