@@ -13,6 +13,10 @@ public partial class SlotReelControl
     private const double ItemWidth = 200;
     private const double ItemHeight = 220;
 
+    // Minimum number of slots required between two tiles for the same game,
+    // wide enough that a viewport-full of tiles never shows the same game twice.
+    private const int MinDuplicateGap = 6;
+
     private static readonly Random Rng = new();
 
     public event EventHandler<SteamGame>? SpinCompleted;
@@ -46,6 +50,8 @@ public partial class SlotReelControl
         int winnerIndex = Math.Max(0, sequence.Count - tailBuffer);
         sequence.Insert(winnerIndex, winner);
 
+        DeduplicateNearby(sequence, winnerIndex, MinDuplicateGap);
+
         foreach (var game in sequence)
             ReelStrip.Children.Add(BuildReelItem(game));
 
@@ -73,6 +79,21 @@ public partial class SlotReelControl
 
     private static Border BuildReelItem(SteamGame game)
     {
+        // Sits behind the image so a game with no working art still shows its
+        // name instead of a blank tile (library capsule art doesn't exist for
+        // every app, and the store header image can be missing too).
+        var nameFallback = new TextBlock
+        {
+            Text = game.Name,
+            Foreground = Brushes.White,
+            FontSize = 13,
+            FontWeight = FontWeights.SemiBold,
+            TextAlignment = TextAlignment.Center,
+            TextWrapping = TextWrapping.Wrap,
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(10),
+        };
+
         var image = new Image
         {
             Width = ItemWidth,
@@ -80,14 +101,24 @@ public partial class SlotReelControl
             Stretch = Stretch.UniformToFill,
         };
 
-        try
+        bool triedHeaderFallback = false;
+        image.ImageFailed += (_, _) =>
         {
-            image.Source = new BitmapImage(new Uri(game.CapsuleImageUrl));
-        }
-        catch
-        {
-            // Missing/broken art shouldn't crash the spin — leave it blank.
-        }
+            if (triedHeaderFallback || string.IsNullOrWhiteSpace(game.HeaderImageUrl))
+            {
+                image.Source = null;
+                return;
+            }
+
+            triedHeaderFallback = true;
+            TrySetSource(image, game.HeaderImageUrl);
+        };
+
+        TrySetSource(image, game.CapsuleImageUrl);
+
+        var grid = new Grid { Width = ItemWidth, Height = ItemHeight };
+        grid.Children.Add(nameFallback);
+        grid.Children.Add(image);
 
         return new Border
         {
@@ -97,8 +128,81 @@ public partial class SlotReelControl
             CornerRadius = new CornerRadius(6),
             ClipToBounds = true,
             Background = new SolidColorBrush(Color.FromRgb(40, 44, 54)),
-            Child = image,
+            ToolTip = game.Name,
+            Child = grid,
         };
+    }
+
+    private static void TrySetSource(Image image, string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            image.Source = null;
+            return;
+        }
+
+        try
+        {
+            image.Source = new BitmapImage(new Uri(url));
+        }
+        catch
+        {
+            // Missing/broken art shouldn't crash the spin — leave it blank.
+            image.Source = null;
+        }
+    }
+
+    /// <summary>
+    /// Ensures no two tiles for the same game land within <paramref name="minGap"/>
+    /// slots of each other. Each lap is shuffled independently and the pool
+    /// itself always contains the winner, so without this a second copy of the
+    /// winner's game (or any other) can land just a few tiles from where it
+    /// stops. The winner's own slot is never moved, since <paramref name="winnerIndex"/>
+    /// is where the reel physically stops.
+    /// </summary>
+    private static void DeduplicateNearby(List<SteamGame> sequence, int winnerIndex, int minGap)
+    {
+        var lastSeenIndex = new Dictionary<int, int>();
+
+        for (int i = 0; i < sequence.Count; i++)
+        {
+            int appId = sequence[i].AppId;
+            bool tooClose = lastSeenIndex.TryGetValue(appId, out int prevIndex) && i - prevIndex < minGap;
+
+            if (tooClose && i != winnerIndex)
+            {
+                int swapWith = FindSwapCandidate(sequence, i, winnerIndex, minGap, lastSeenIndex);
+                if (swapWith != -1)
+                {
+                    (sequence[i], sequence[swapWith]) = (sequence[swapWith], sequence[i]);
+                    appId = sequence[i].AppId;
+                }
+            }
+
+            lastSeenIndex[appId] = i;
+        }
+    }
+
+    /// <summary>Finds the nearest later slot that can swap into <paramref name="i"/> without creating a new too-close pair.</summary>
+    private static int FindSwapCandidate(List<SteamGame> sequence, int i, int winnerIndex, int minGap, Dictionary<int, int> lastSeenIndex)
+    {
+        for (int j = i + 1; j < sequence.Count; j++)
+        {
+            if (j == winnerIndex || sequence[j].AppId == sequence[i].AppId)
+            {
+                continue;
+            }
+
+            bool candidateStillTooClose = lastSeenIndex.TryGetValue(sequence[j].AppId, out int candidatePrevIndex)
+                                           && i - candidatePrevIndex < minGap;
+
+            if (!candidateStillTooClose)
+            {
+                return j;
+            }
+        }
+
+        return -1;
     }
 
     private static List<SteamGame> Shuffle(IReadOnlyList<SteamGame> source)

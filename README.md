@@ -27,35 +27,54 @@ and a store region code (`ca` for CAD pricing).
 ## Running it
 
 ```
-cd SteamShuffle
 dotnet restore
 dotnet run --project SteamShuffle
 ```
 
 Or open `SteamShuffle.sln` in Visual Studio / Rider and hit Run.
 
+## Architecture
+
+The solution is split into layered projects (dependency rule flows one way,
+outer -> inner never the reverse):
+
+- **`SteamShuffle.CoreModels`** — pure domain models/DTOs (`SteamGame`,
+  `GameCollection`, `StoreDetails`, `StoreSearchResult`, `AppSettings`,
+  `LibrarySyncProgress`) plus the `ICollectionRepository` abstraction. No
+  dependencies.
+- **`SteamShuffle.ApiClients`** — thin wrappers around the external Steam HTTP
+  endpoints (`SteamWebApiService`, `SteamWishlistService`, `SteamStoreService`).
+- **`SteamShuffle.Infrastructure`** — local persistence: `CollectionRepository`
+  (SQLite) and `AppSettingsStore` (the `settings.json` file).
+- **`SteamShuffle.Services`** — business orchestration (`LibraryManager`), which
+  depends on Infrastructure only through `ICollectionRepository`, never the
+  concrete SQLite class.
+- **`SteamShuffle`** — the WPF presentation project (Views, Controls,
+  MainWindow, App) and composition root.
+- **`SteamShuffle.Tests`** — xUnit tests, folders mirror the project split.
+
 ## Running the tests
 
 ```
-cd SteamShuffle
 dotnet test
 ```
 
 The `SteamShuffle.Tests` project (xUnit) covers:
 
-- **`SteamGameTests`** — the display-string logic (playtime formatting, "Never"
-  vs "N/A" vs a real date, free-vs-priced, owned/wishlist source badges).
-- **`CollectionRepositoryTests`** — the SQLite layer: upsert merge semantics
-  (owning a wishlisted game doesn't drop the wishlist flag or vice versa,
-  playtime never regresses, a null last-played doesn't clobber a real one),
-  store-detail round-tripping, staleness detection, and collection CRUD
-  including duplicate-add and cascade-delete. Each test runs against its own
-  temp SQLite file, so tests don't share state or touch your real library.
-- **`SteamWebApiServiceTests`**, **`SteamWishlistServiceTests`**,
+- **`CoreModels/SteamGameTests`** — the display-string logic (playtime
+  formatting, "Never" vs "N/A" vs a real date, free-vs-priced, owned/wishlist
+  source badges).
+- **`CoreModels/AppSettingsTests`** — the `IsConfigured` validation logic.
+- **`Infrastructure/CollectionRepositoryTests`** — the SQLite layer: upsert
+  merge semantics (owning a wishlisted game doesn't drop the wishlist flag or
+  vice versa, playtime never regresses, a null last-played doesn't clobber a
+  real one), store-detail round-tripping, staleness detection, and collection
+  CRUD including duplicate-add and cascade-delete. Each test runs against its
+  own temp SQLite file, so tests don't share state or touch your real library.
+- **`ApiClients/SteamWebApiServiceTests`**, **`SteamWishlistServiceTests`**,
   **`SteamStoreServiceTests`** — JSON parsing against a fake `HttpMessageHandler`
   (no real network calls), including pagination, the "0 means never played"
   quirk, free-game price handling, and the privacy-related error messages.
-- **`AppSettingsTests`** — the `IsConfigured` validation logic.
 
 ## How it works
 
@@ -86,7 +105,11 @@ The `SteamShuffle.Tests` project (xUnit) covers:
 2. **+ New** — create a collection (e.g. "Cozy Nights", "Couch Co-op").
 3. Select a collection, click **Manage** — check off any owned or wishlisted
    game to add it. Wishlist games show a small "Wishlist" badge.
-4. Select a collection and hit **SPIN**.
+4. **+ Add Game** — for games the Steam Web API can't see (most commonly
+   Family Share titles, which never show up in `GetOwnedGames`), search by
+   name, pick the match, and it's added to your library tagged
+   "Family/Manual" so it can join collections and spins like any other game.
+5. Select a collection and hit **SPIN**.
 
 ## Known limitations
 
@@ -96,3 +119,5 @@ The `SteamShuffle.Tests` project (xUnit) covers:
 - The `appdetails` endpoint is unofficial and can occasionally rate-limit or
   omit price data for region-restricted titles; those will show "N/A" for
   price rather than crash the sync.
+- Family Share games never appear via the Steam Web API (no official endpoint
+  exposes a family's shared library) — use **+ Add Game** to add them by hand.
