@@ -111,6 +111,10 @@ public partial class SlotReelControl
             }
 
             triedHeaderFallback = true;
+            // The header image is a wide landscape banner, not the tall capsule
+            // art the tile is sized for — UniformToFill would zoom in and crop
+            // most of it away, so fit it in full (letterboxed) instead.
+            image.Stretch = Stretch.Uniform;
             TrySetSource(image, game.HeaderImageUrl);
         };
 
@@ -159,19 +163,31 @@ public partial class SlotReelControl
     /// winner's game (or any other) can land just a few tiles from where it
     /// stops. The winner's own slot is never moved, since <paramref name="winnerIndex"/>
     /// is where the reel physically stops.
+    ///
+    /// Runs forward then backward: a single forward pass only catches a copy
+    /// that comes *after* an earlier one, so an earlier movable copy sitting
+    /// right before the (immovable) winner would otherwise never get relocated
+    /// away from it. The backward pass catches exactly that case.
     /// </summary>
     private static void DeduplicateNearby(List<SteamGame> sequence, int winnerIndex, int minGap)
     {
-        var lastSeenIndex = new Dictionary<int, int>();
+        DeduplicateDirectional(sequence, winnerIndex, minGap, step: 1);
+        DeduplicateDirectional(sequence, winnerIndex, minGap, step: -1);
+    }
 
-        for (int i = 0; i < sequence.Count; i++)
+    private static void DeduplicateDirectional(List<SteamGame> sequence, int winnerIndex, int minGap, int step)
+    {
+        var seenIndex = new Dictionary<int, int>();
+        int start = step > 0 ? 0 : sequence.Count - 1;
+
+        for (int i = start; i >= 0 && i < sequence.Count; i += step)
         {
             int appId = sequence[i].AppId;
-            bool tooClose = lastSeenIndex.TryGetValue(appId, out int prevIndex) && i - prevIndex < minGap;
+            bool tooClose = seenIndex.TryGetValue(appId, out int seen) && Math.Abs(i - seen) < minGap;
 
             if (tooClose && i != winnerIndex)
             {
-                int swapWith = FindSwapCandidate(sequence, i, winnerIndex, minGap, lastSeenIndex);
+                int swapWith = FindSwapCandidate(sequence, i, winnerIndex, minGap, seenIndex, step);
                 if (swapWith != -1)
                 {
                     (sequence[i], sequence[swapWith]) = (sequence[swapWith], sequence[i]);
@@ -179,22 +195,22 @@ public partial class SlotReelControl
                 }
             }
 
-            lastSeenIndex[appId] = i;
+            seenIndex[appId] = i;
         }
     }
 
-    /// <summary>Finds the nearest later slot that can swap into <paramref name="i"/> without creating a new too-close pair.</summary>
-    private static int FindSwapCandidate(List<SteamGame> sequence, int i, int winnerIndex, int minGap, Dictionary<int, int> lastSeenIndex)
+    /// <summary>Finds the nearest slot (searching in <paramref name="step"/> direction) that can swap into <paramref name="i"/> without creating a new too-close pair.</summary>
+    private static int FindSwapCandidate(List<SteamGame> sequence, int i, int winnerIndex, int minGap, Dictionary<int, int> seenIndex, int step)
     {
-        for (int j = i + 1; j < sequence.Count; j++)
+        for (int j = i + step; j >= 0 && j < sequence.Count; j += step)
         {
             if (j == winnerIndex || sequence[j].AppId == sequence[i].AppId)
             {
                 continue;
             }
 
-            bool candidateStillTooClose = lastSeenIndex.TryGetValue(sequence[j].AppId, out int candidatePrevIndex)
-                                           && i - candidatePrevIndex < minGap;
+            bool candidateStillTooClose = seenIndex.TryGetValue(sequence[j].AppId, out int candidateSeen)
+                                           && Math.Abs(i - candidateSeen) < minGap;
 
             if (!candidateStillTooClose)
             {
