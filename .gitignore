@@ -1,0 +1,22 @@
+## Build outputs
+[Bb]in/
+[Oo]bj/
+
+## Visual Studio / Rider
+.vs/
+.idea/
+*.user
+*.suo
+
+## Test results
+[Tt]est[Rr]esult*/
+*.trx
+
+## NuGet
+*.nupkg
+**/packages/*
+!**/packages/build/
+
+## Rider/ReSharper
+_ReSharper*/
+*.DotSettings.user
