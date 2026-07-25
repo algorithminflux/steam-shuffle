@@ -11,7 +11,7 @@ public partial class SlotReelControl
 {
     private const double SlotWidth = 220;   // total width reserved per reel item, including margin
     private const double ItemWidth = 200;
-    private const double ItemHeight = 220;
+    private const double ItemHeight = 300;   // matches the 2:3 capsule art aspect ratio, so UniformToFill doesn't crop
 
     // Minimum number of slots required between two tiles for the same game,
     // wide enough that a viewport-full of tiles never shows the same game twice.

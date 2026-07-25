@@ -56,15 +56,17 @@ public partial class CollectionManagerWindow : Window
             .Select(g => new GameSelectionItem(g, memberIds.Contains(g.AppId)))
             .ToList();
 
-        GamesList.ItemsSource = _allItems;
+        ApplyFilter();
     }
 
     private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
     {
-        var query = SearchBox.Text.Trim();
-        GamesList.ItemsSource = string.IsNullOrEmpty(query)
-            ? _allItems
-            : _allItems.Where(i => i.Game.Name.Contains(query, System.StringComparison.OrdinalIgnoreCase)).ToList();
+        ApplyFilter();
+    }
+
+    private void SelectedOnlyCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        ApplyFilter();
     }
 
     private void MembershipCheckBox_Changed(object sender, RoutedEventArgs e)
@@ -88,5 +90,23 @@ public partial class CollectionManagerWindow : Window
     {
         DialogResult = true;
         Close();
+    }
+
+    private void ApplyFilter()
+    {
+        var query = SearchBox.Text.Trim();
+        IEnumerable<GameSelectionItem> items = _allItems;
+
+        if (SelectedOnlyCheckBox.IsChecked == true)
+        {
+            items = items.Where(i => i.IsSelected);
+        }
+
+        if (!string.IsNullOrEmpty(query))
+        {
+            items = items.Where(i => i.Game.Name.Contains(query, System.StringComparison.OrdinalIgnoreCase));
+        }
+
+        GamesList.ItemsSource = items.ToList();
     }
 }

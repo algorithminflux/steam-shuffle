@@ -55,7 +55,7 @@ public class CollectionRepository : ICollectionRepository
                               INSERT INTO games (app_id, name, playtime_minutes, last_played_unix, is_owned, is_wishlisted, is_manual)
                               VALUES ($appId, $name, $playtime, $lastPlayed, $isOwned, $isWishlisted, $isManual)
                               ON CONFLICT(app_id) DO UPDATE SET
-                                  name = excluded.name,
+                                  name = CASE WHEN excluded.name = $placeholderName THEN games.name ELSE excluded.name END,
                                   playtime_minutes = MAX(games.playtime_minutes, excluded.playtime_minutes),
                                   last_played_unix = COALESCE(excluded.last_played_unix, games.last_played_unix),
                                   is_owned = MAX(games.is_owned, excluded.is_owned),
@@ -64,6 +64,10 @@ public class CollectionRepository : ICollectionRepository
                               """;
             cmd.Parameters.AddWithValue("$appId", game.AppId);
             cmd.Parameters.AddWithValue("$name", game.Name);
+            // The wishlist endpoint only returns app IDs, so wishlist-only entries are
+            // upserted with this placeholder name — never let it clobber a real name
+            // already learned elsewhere (owned-games sync, manual add, or store details).
+            cmd.Parameters.AddWithValue("$placeholderName", $"App {game.AppId}");
             cmd.Parameters.AddWithValue("$playtime", game.PlaytimeForeverMinutes);
             cmd.Parameters.AddWithValue("$lastPlayed", (object?)game.LastPlayed?.ToUnixTimeSeconds() ?? DBNull.Value);
             cmd.Parameters.AddWithValue("$isOwned", game.IsOwned ? 1 : 0);
@@ -81,6 +85,7 @@ public class CollectionRepository : ICollectionRepository
         using var cmd = conn.CreateCommand();
         cmd.CommandText = """
                           UPDATE games SET
+                              name = COALESCE($name, name),
                               header_image_url = $header,
                               is_free = $isFree,
                               price_cad = $price,
@@ -89,6 +94,7 @@ public class CollectionRepository : ICollectionRepository
                               store_fetched_at_unix = $fetchedAt
                           WHERE app_id = $appId;
                           """;
+        cmd.Parameters.AddWithValue("$name", (object?)details.Name ?? DBNull.Value);
         cmd.Parameters.AddWithValue("$header", (object?)details.HeaderImageUrl ?? DBNull.Value);
         cmd.Parameters.AddWithValue("$isFree", details.IsFree ? 1 : 0);
         cmd.Parameters.AddWithValue("$price", (object?)details.PriceCad ?? DBNull.Value);
@@ -113,13 +119,23 @@ public class CollectionRepository : ICollectionRepository
         return games;
     }
 
-    /// <summary>Games whose store metadata is missing or older than <paramref name="maxAge"/>.</summary>
+    /// <summary>
+    /// Games whose store metadata is missing or older than <paramref name="maxAge"/>,
+    /// plus any still stuck on the wishlist-sync placeholder name (e.g. "App 619820")
+    /// regardless of how recently they were fetched, since that means the previous
+    /// fetch never resolved a real name.
+    /// </summary>
     public List<int> GetAppIdsNeedingStoreRefresh(TimeSpan maxAge)
     {
         var cutoff = DateTimeOffset.UtcNow.Subtract(maxAge).ToUnixTimeSeconds();
         using var conn = Open();
         using var cmd = conn.CreateCommand();
-        cmd.CommandText = "SELECT app_id FROM games WHERE store_fetched_at_unix IS NULL OR store_fetched_at_unix < $cutoff;";
+        cmd.CommandText = """
+                          SELECT app_id FROM games
+                          WHERE store_fetched_at_unix IS NULL
+                             OR store_fetched_at_unix < $cutoff
+                             OR name = ('App ' || app_id);
+                          """;
         cmd.Parameters.AddWithValue("$cutoff", cutoff);
         using var reader = cmd.ExecuteReader();
 

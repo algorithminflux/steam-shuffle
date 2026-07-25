@@ -80,10 +80,14 @@ The `SteamShuffle.Tests` project (xUnit) covers:
 
 - **Owned games + playtime + last played** come from the documented Steam Web
   API (`IPlayerService/GetOwnedGames`).
-- **Wishlist** comes from Steam's legacy public `wishlistdata` endpoint —
+- **Wishlist** comes from Steam's `IWishlistService/GetWishlist` endpoint —
   there's no officially documented, API-key-based way to read a wishlist, so
   this is the standard workaround every third-party Steam tool uses. It only
-  needs your SteamID64, not the API key.
+  needs your SteamID64, not the API key. (The older `wishlistdata` page
+  endpoint this app used to call has since been retired by Valve and now just
+  redirects to the store homepage.) This endpoint only returns app IDs, so
+  wishlist entries show a placeholder name until the next store-details sync
+  fills in the real one.
 - **Price (CAD), genre, and store tags** come from the storefront `appdetails`
   endpoint, throttled to roughly 1 request/second and cached locally so you're
   not re-fetching on every launch. Note: what's shown as "tags" is Steam's

@@ -15,9 +15,19 @@
 
         <TextBlock x:Name="TitleText" FontSize="18" FontWeight="Bold" Grid.Row="0" Margin="0,0,0,12" />
 
-        <TextBox x:Name="SearchBox" Grid.Row="1" Margin="0,0,0,10"
-                 TextChanged="SearchBox_TextChanged"
-                 Tag="Search your library..." />
+        <Grid Grid.Row="1" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBox x:Name="SearchBox" Grid.Column="0" Margin="0,0,10,0"
+                     TextChanged="SearchBox_TextChanged"
+                     Tag="Search your library..." />
+
+            <CheckBox x:Name="SelectedOnlyCheckBox" Grid.Column="1" Content="Selected only"
+                      VerticalAlignment="Center" Checked="SelectedOnlyCheckBox_Changed" Unchecked="SelectedOnlyCheckBox_Changed" />
+        </Grid>
 
         <ListBox x:Name="GamesList" Grid.Row="2" Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
             <ListBox.ItemTemplate>
