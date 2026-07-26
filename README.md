@@ -6,7 +6,7 @@ slot-machine style reveal animation.
 
 ## Demo
 
-[▶ Watch the demo](docs/demo.mp4)
+[▶ Watch the demo](https://raw.githubusercontent.com/algorithminflux/steam-shuffle/main/docs/demo.mp4)
 
 ## Requirements
 
