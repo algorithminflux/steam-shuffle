@@ -4,6 +4,10 @@ A WPF desktop app that picks a random game from your own curated collections
 (pulled from your owned Steam library **and** your wishlist), with a
 slot-machine style reveal animation.
 
+## Demo
+
+[▶ Watch the demo](docs/demo.mp4)
+
 ## Requirements
 
 - .NET 8 SDK (Windows) — https://dotnet.microsoft.com/download
