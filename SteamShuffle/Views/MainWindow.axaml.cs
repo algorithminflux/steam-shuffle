@@ -206,6 +206,10 @@ public partial class MainWindow : Window
         ResultCard.IsVisible = false;
         SpinButton.IsEnabled = false;
 
+        // The reel measures the viewport width once at spin start to center the
+        // winner under the pointer; resizing mid-animation would desync the two.
+        CanResize = false;
+
         var winner = pool[_rng.Next(pool.Count)];
 
         // Cleanest improvement from the WPF port: no SpinCompleted event
@@ -213,6 +217,7 @@ public partial class MainWindow : Window
         var result = await Reel.SpinAsync(pool, winner);
         ShowResult(result);
 
+        CanResize = true;
         SpinButton.IsEnabled = true;
     }
 
@@ -235,8 +240,11 @@ public partial class MainWindow : Window
     {
         try
         {
-            using var stream = await _http.GetStreamAsync(url);
-            ResultImage.Source = new Bitmap(stream);
+            // Bitmap(Stream) needs a seekable stream to decode via Skia; the raw
+            // network stream isn't seekable, so buffer it into memory first.
+            byte[] bytes = await _http.GetByteArrayAsync(url);
+            using var memoryStream = new MemoryStream(bytes);
+            ResultImage.Source = new Bitmap(memoryStream);
         }
         catch
         {

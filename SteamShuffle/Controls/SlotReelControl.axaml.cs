@@ -85,7 +85,10 @@ public partial class SlotReelControl : UserControl
             },
         };
 
-        await animation.RunAsync(_reelTransform);
+        // TransformAnimator requires the visual that owns the RenderTransform, not the
+        // Transform object itself -- passing _reelTransform directly throws
+        // InvalidCastException trying to cast it to Visual.
+        await animation.RunAsync(ReelStrip);
         _reelTransform.X = targetX; // belt-and-braces; FillMode.Forward should already leave it here
 
         return winner;
@@ -163,8 +166,12 @@ public partial class SlotReelControl : UserControl
 
         try
         {
-            using var stream = await ImageHttp.GetStreamAsync(url);
-            var bitmap = new Bitmap(stream);
+            // Avalonia's Bitmap(Stream) goes through Skia, which needs a seekable
+            // stream to sniff the image format -- the raw network stream from
+            // GetStreamAsync isn't seekable and fails to decode, so buffer it first.
+            byte[] bytes = await ImageHttp.GetByteArrayAsync(url);
+            using var memoryStream = new MemoryStream(bytes);
+            var bitmap = new Bitmap(memoryStream);
 
             // Bitmap decoding can happen off-thread, but Image.Source must be
             // assigned on the UI thread.
