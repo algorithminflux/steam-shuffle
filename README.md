@@ -1,8 +1,9 @@
 # Steam Shuffle
 
-A WPF desktop app that picks a random game from your own curated collections
-(pulled from your owned Steam library **and** your wishlist), with a
-slot-machine style reveal animation.
+A cross-platform (Windows/Linux/macOS) desktop app, built with Avalonia UI,
+that picks a random game from your own curated collections (pulled from your
+owned Steam library **and** your wishlist), with a slot-machine style reveal
+animation.
 
 ## Demo
 
@@ -10,7 +11,7 @@ slot-machine style reveal animation.
 
 ## Requirements
 
-- .NET 8 SDK (Windows) — https://dotnet.microsoft.com/download
+- .NET 8 SDK (Windows, Linux, or macOS) — https://dotnet.microsoft.com/download
 - A Steam account with a public "Game details" privacy setting (needed so the
   app can read your owned games and wishlist)
 
@@ -53,7 +54,7 @@ outer -> inner never the reverse):
 - **`SteamShuffle.Services`** — business orchestration (`LibraryManager`), which
   depends on Infrastructure only through `ICollectionRepository`, never the
   concrete SQLite class.
-- **`SteamShuffle`** — the WPF presentation project (Views, Controls,
+- **`SteamShuffle`** — the Avalonia presentation project (Views, Controls,
   MainWindow, App) and composition root.
 - **`SteamShuffle.Tests`** — xUnit tests, folders mirror the project split.
 
@@ -100,10 +101,11 @@ The `SteamShuffle.Tests` project (xUnit) covers:
   official API and would require HTML scraping, which this app deliberately
   avoids.
 - Everything (owned/wishlist status, store metadata, your collections) is
-  cached in a local SQLite database at
-  `%AppData%\SteamShuffle\library.db`. Your API key and SteamID64 live in
-  `%AppData%\SteamShuffle\settings.json`. Nothing is sent anywhere except
-  directly to Steam's own servers.
+  cached in a local SQLite database under your OS's app-data folder
+  (`%AppData%\SteamShuffle\library.db` on Windows, `~/.config/SteamShuffle/`
+  on Linux, `~/Library/Application Support/SteamShuffle/` on macOS). Your API
+  key and SteamID64 live alongside it in `settings.json`. Nothing is sent
+  anywhere except directly to Steam's own servers.
 - If a wishlist placeholder name (e.g. "App 619820") is still showing after a
   sync, the next **Sync Library** keeps retrying that game's store details
   regardless of the normal 3-day cache window, until a real name comes back.

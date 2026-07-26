@@ -1,0 +1,57 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="SteamShuffle.App"
+             RequestedThemeVariant="Dark">
+
+    <!-- Resources must come before Styles: the style setters below resolve
+         {StaticResource ...} at populate time, so the dictionary they look
+         into has to exist first. -->
+    <Application.Resources>
+        <SolidColorBrush x:Key="BackgroundBrush" Color="#12151A" />
+        <SolidColorBrush x:Key="PanelBrush" Color="#1B1F27" />
+        <SolidColorBrush x:Key="BorderBrush" Color="#2E3440" />
+        <SolidColorBrush x:Key="AccentBrush" Color="#66C0F4" />
+        <SolidColorBrush x:Key="AccentTextBrush" Color="#0E1620" />
+        <SolidColorBrush x:Key="TextBrush" Color="#E8ECF1" />
+        <SolidColorBrush x:Key="MutedTextBrush" Color="#9AA4B2" />
+    </Application.Resources>
+
+    <Application.Styles>
+        <FluentTheme />
+
+        <!--
+            Avalonia styling works by CSS-like selectors instead of WPF's
+            ControlTemplate + Trigger approach. Any Button with Classes="primary"
+            picks up this look; WPF used a named Style resource applied via
+            Style="{StaticResource PrimaryButton}".
+        -->
+        <Style Selector="Button.primary">
+            <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AccentTextBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Padding" Value="18,10" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
+            <Setter Property="Opacity" Value="0.88" />
+        </Style>
+        <Style Selector="Button.primary:disabled">
+            <Setter Property="Opacity" Value="0.4" />
+        </Style>
+
+        <Style Selector="Button.secondary">
+            <Setter Property="Background" Value="{StaticResource PanelBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="14,8" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.secondary:pointerover">
+            <Setter Property="Background" Value="#232834" />
+        </Style>
+    </Application.Styles>
+
+</Application>

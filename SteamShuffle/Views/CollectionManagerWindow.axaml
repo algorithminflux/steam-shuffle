@@ -1,0 +1,43 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="clr-namespace:SteamShuffle.Views"
+        x:Class="SteamShuffle.Views.CollectionManagerWindow"
+        Title="Manage Collection"
+        Width="560" Height="640"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource BackgroundBrush}">
+    <Grid Margin="20" RowDefinitions="Auto,Auto,*,Auto">
+        <TextBlock Name="TitleText" FontSize="18" FontWeight="Bold" Grid.Row="0" Margin="0,0,0,12" />
+
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="0,0,0,10">
+            <TextBox Name="SearchBox" Grid.Column="0" Margin="0,0,10,0"
+                     TextChanged="SearchBox_TextChanged"
+                     Watermark="Search your library..." />
+
+            <CheckBox Name="SelectedOnlyCheckBox" Grid.Column="1" Content="Selected only"
+                      VerticalAlignment="Center" Checked="SelectedOnlyCheckBox_Changed" Unchecked="SelectedOnlyCheckBox_Changed" />
+        </Grid>
+
+        <ListBox Name="GamesList" Grid.Row="2" Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="views:GameSelectionItem">
+                    <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" Margin="8,6" Checked="MembershipCheckBox_Changed" Unchecked="MembershipCheckBox_Changed">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding Game.Name}" Width="320" TextTrimming="CharacterEllipsis" />
+                            <Border Background="#2A3B4D" CornerRadius="4" Padding="6,2" Margin="8,0,0,0" IsVisible="{Binding IsWishlistBadgeVisible}">
+                                <TextBlock Text="Wishlist" FontSize="10" Foreground="#8FCBEE" />
+                            </Border>
+                            <Border Background="#3D2A4D" CornerRadius="4" Padding="6,2" Margin="8,0,0,0" IsVisible="{Binding IsManualBadgeVisible}">
+                                <TextBlock Text="Family/Manual" FontSize="10" Foreground="#D6A8F0" />
+                            </Border>
+                        </StackPanel>
+                    </CheckBox>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+            <Button Content="Done" Classes="primary" Click="Done_Click" />
+        </StackPanel>
+    </Grid>
+</Window>

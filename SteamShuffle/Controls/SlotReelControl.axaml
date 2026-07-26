@@ -1,27 +1,20 @@
-<UserControl x:Class="SteamShuffle.Controls.SlotReelControl"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d"
+             x:Class="SteamShuffle.Controls.SlotReelControl"
              Height="340">
 
     <Border Background="#1B1F27" CornerRadius="10" BorderBrush="#3A4150" BorderThickness="1" ClipToBounds="True">
         <Grid>
-            <Border x:Name="ReelClip" ClipToBounds="True" Margin="0">
-                <Canvas x:Name="ReelCanvas" Height="320" HorizontalAlignment="Left">
-                    <StackPanel x:Name="ReelStrip" Orientation="Horizontal" Canvas.Top="10">
-                        <StackPanel.RenderTransform>
-                            <TranslateTransform x:Name="ReelTransform" X="0" />
-                        </StackPanel.RenderTransform>
-                    </StackPanel>
+            <Border Name="ReelClip" ClipToBounds="True">
+                <Canvas Name="ReelCanvas" Height="320" HorizontalAlignment="Left">
+                    <StackPanel Name="ReelStrip" Orientation="Horizontal" Canvas.Top="10" />
                 </Canvas>
             </Border>
 
             <!-- Gradient fades on either edge so the reel feels like it scrolls into the frame -->
             <Rectangle IsHitTestVisible="False" Width="60" HorizontalAlignment="Left">
                 <Rectangle.Fill>
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
                         <GradientStop Color="#1B1F27" Offset="0" />
                         <GradientStop Color="#001B1F27" Offset="1" />
                     </LinearGradientBrush>
@@ -29,7 +22,7 @@
             </Rectangle>
             <Rectangle IsHitTestVisible="False" Width="60" HorizontalAlignment="Right">
                 <Rectangle.Fill>
-                    <LinearGradientBrush StartPoint="1,0" EndPoint="0,0">
+                    <LinearGradientBrush StartPoint="100%,0%" EndPoint="0%,0%">
                         <GradientStop Color="#1B1F27" Offset="0" />
                         <GradientStop Color="#001B1F27" Offset="1" />
                     </LinearGradientBrush>

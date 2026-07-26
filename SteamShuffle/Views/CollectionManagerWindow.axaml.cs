@@ -1,6 +1,6 @@
 using System.ComponentModel;
-using System.Windows;
-using System.Windows.Controls;
+using Avalonia.Controls;
+using Avalonia.Interactivity;
 using SteamShuffle.CoreModels;
 
 namespace SteamShuffle.Views;
@@ -10,8 +10,8 @@ public class GameSelectionItem : INotifyPropertyChanged
     private bool _isSelected;
 
     public SteamGame Game { get; }
-    public Visibility WishlistBadgeVisibility => Game.IsWishlisted ? Visibility.Visible : Visibility.Collapsed;
-    public Visibility ManualBadgeVisibility => Game.IsManual ? Visibility.Visible : Visibility.Collapsed;
+    public bool IsWishlistBadgeVisible => Game.IsWishlisted;
+    public bool IsManualBadgeVisible => Game.IsManual;
 
     public bool IsSelected
     {
@@ -59,17 +59,17 @@ public partial class CollectionManagerWindow : Window
         ApplyFilter();
     }
 
-    private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
+    private void SearchBox_TextChanged(object? sender, TextChangedEventArgs e)
     {
         ApplyFilter();
     }
 
-    private void SelectedOnlyCheckBox_Changed(object sender, RoutedEventArgs e)
+    private void SelectedOnlyCheckBox_Changed(object? sender, RoutedEventArgs e)
     {
         ApplyFilter();
     }
 
-    private void MembershipCheckBox_Changed(object sender, RoutedEventArgs e)
+    private void MembershipCheckBox_Changed(object? sender, RoutedEventArgs e)
     {
         if (sender is not CheckBox { DataContext: GameSelectionItem item })
         {
@@ -86,15 +86,11 @@ public partial class CollectionManagerWindow : Window
         }
     }
 
-    private void Done_Click(object sender, RoutedEventArgs e)
-    {
-        DialogResult = true;
-        Close();
-    }
+    private void Done_Click(object? sender, RoutedEventArgs e) => Close(true);
 
     private void ApplyFilter()
     {
-        var query = SearchBox.Text.Trim();
+        var query = (SearchBox.Text ?? string.Empty).Trim();
         IEnumerable<GameSelectionItem> items = _allItems;
 
         if (SelectedOnlyCheckBox.IsChecked == true)
@@ -104,7 +100,7 @@ public partial class CollectionManagerWindow : Window
 
         if (!string.IsNullOrEmpty(query))
         {
-            items = items.Where(i => i.Game.Name.Contains(query, System.StringComparison.OrdinalIgnoreCase));
+            items = items.Where(i => i.Game.Name.Contains(query, StringComparison.OrdinalIgnoreCase));
         }
 
         GamesList.ItemsSource = items.ToList();

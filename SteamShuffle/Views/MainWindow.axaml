@@ -1,0 +1,105 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:SteamShuffle.Controls"
+        xmlns:models="clr-namespace:SteamShuffle.CoreModels;assembly=SteamShuffle.CoreModels"
+        x:Class="SteamShuffle.Views.MainWindow"
+        Title="Steam Shuffle" Height="780" Width="1080"
+        Background="{StaticResource BackgroundBrush}"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="20">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="260" />
+            <ColumnDefinition Width="20" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Sidebar -->
+        <Grid Grid.Column="0" RowDefinitions="Auto,Auto,*,Auto,Auto">
+            <TextBlock Text="Collections" FontSize="20" FontWeight="Bold" Grid.Row="0" Margin="0,0,0,12" />
+
+            <StackPanel Orientation="Horizontal" Grid.Row="1" Margin="0,0,0,12" Spacing="6">
+                <Button Content="+ New" Classes="secondary" Padding="10,6" Click="NewCollection_Click" />
+                <Button Content="Manage" Classes="secondary" Padding="10,6" Click="ManageCollection_Click" />
+                <Button Content="+ Add Game" Classes="secondary" Padding="10,6" Click="AddGame_Click" />
+            </StackPanel>
+
+            <ListBox Name="CollectionsList" Grid.Row="2" SelectionChanged="CollectionsList_SelectionChanged">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="models:GameCollection">
+                        <Border Background="{StaticResource PanelBrush}" CornerRadius="6" Padding="12,10" Margin="0,0,0,8">
+                            <StackPanel>
+                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding AppIds.Count, StringFormat='{}{0} games'}"
+                                           Foreground="{StaticResource MutedTextBrush}" FontSize="11" />
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <Button Content="Sync Library" Classes="secondary" Grid.Row="3" Margin="0,12,0,8" Click="Sync_Click" />
+            <Button Content="Settings" Classes="secondary" Grid.Row="4" Click="Settings_Click" />
+        </Grid>
+
+        <!-- Main content -->
+        <Grid Grid.Column="2" RowDefinitions="Auto,340,Auto,*">
+            <TextBlock Name="StatusText" Grid.Row="0" Foreground="{StaticResource MutedTextBrush}"
+                       TextWrapping="Wrap" Margin="0,0,0,16" />
+
+            <controls:SlotReelControl Name="Reel" Grid.Row="1" />
+
+            <Button Name="SpinButton" Content="SPIN" Classes="primary"
+                    Grid.Row="2" FontSize="18" Padding="40,14" Margin="0,20,0,20"
+                    HorizontalAlignment="Center" Click="Spin_Click" />
+
+            <Border Name="ResultCard" Grid.Row="3" Background="{StaticResource PanelBrush}" CornerRadius="10"
+                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Padding="20" IsVisible="False">
+                <Grid ColumnDefinitions="200,24,*">
+                    <Border Grid.Column="0" CornerRadius="6" ClipToBounds="True" Height="260" VerticalAlignment="Top">
+                        <Image Name="ResultImage" Stretch="UniformToFill" />
+                    </Border>
+
+                    <StackPanel Grid.Column="2" VerticalAlignment="Top">
+                        <TextBlock Name="ResultTitle" FontSize="26" FontWeight="Bold" TextWrapping="Wrap" Margin="0,0,0,4" />
+                        <TextBlock Name="ResultSourceBadge" Foreground="{StaticResource AccentBrush}" FontSize="12" Margin="0,0,0,16" />
+
+                        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" Margin="0,0,0,16">
+                            <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,16,12">
+                                <TextBlock Text="PRICE (CAD)" Foreground="{StaticResource MutedTextBrush}" FontSize="11" />
+                                <TextBlock Name="ResultPrice" FontSize="16" FontWeight="SemiBold" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,0,12">
+                                <TextBlock Text="GENRE" Foreground="{StaticResource MutedTextBrush}" FontSize="11" />
+                                <TextBlock Name="ResultGenre" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,16,0">
+                                <TextBlock Text="PLAYTIME" Foreground="{StaticResource MutedTextBrush}" FontSize="11" />
+                                <TextBlock Name="ResultPlaytime" FontSize="16" FontWeight="SemiBold" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="1" Grid.Column="1">
+                                <TextBlock Text="LAST PLAYED" Foreground="{StaticResource MutedTextBrush}" FontSize="11" />
+                                <TextBlock Name="ResultLastPlayed" FontSize="16" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </Grid>
+
+                        <TextBlock Text="TAGS" Foreground="{StaticResource MutedTextBrush}" FontSize="11" Margin="0,0,0,6" />
+                        <ItemsControl Name="ResultTags">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="#232A36" CornerRadius="4" Padding="8,4" Margin="0,0,6,6">
+                                        <TextBlock Text="{Binding}" FontSize="12" />
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>

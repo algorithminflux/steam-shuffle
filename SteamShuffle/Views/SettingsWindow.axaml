@@ -1,0 +1,36 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="SteamShuffle.Views.SettingsWindow"
+        Title="Steam Shuffle - Settings"
+        Width="480" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource BackgroundBrush}"
+        CanResize="False">
+    <StackPanel Margin="24">
+        <TextBlock Text="Connect your Steam account" FontSize="18" FontWeight="Bold" Margin="0,0,0,4" />
+        <TextBlock Text="Your key and ID are stored locally on this machine only."
+                   Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,20" TextWrapping="Wrap" />
+
+        <TextBlock Text="Steam Web API Key" Margin="0,0,0,4" />
+        <TextBox Name="ApiKeyBox" Margin="0,0,0,4" />
+        <TextBlock Foreground="{StaticResource MutedTextBrush}" FontSize="11" Margin="0,0,0,16" TextWrapping="Wrap"
+                   Text="Get one free at steamcommunity.com/dev/apikey" />
+
+        <TextBlock Text="SteamID64" Margin="0,0,0,4" />
+        <TextBox Name="SteamIdBox" Margin="0,0,0,4" />
+        <TextBlock Foreground="{StaticResource MutedTextBrush}" FontSize="11" Margin="0,0,0,16" TextWrapping="Wrap"
+                   Text="Find yours at steamid.io by pasting your profile URL." />
+
+        <TextBlock Text="Store currency / region code" Margin="0,0,0,4" />
+        <TextBox Name="CountryCodeBox" Margin="0,0,0,4" Width="80" HorizontalAlignment="Left" />
+        <TextBlock Foreground="{StaticResource MutedTextBrush}" FontSize="11" Margin="0,0,0,20" TextWrapping="Wrap"
+                   Text="&quot;ca&quot; for CAD pricing." />
+
+        <TextBlock Name="ValidationText" Foreground="#E06C75" TextWrapping="Wrap" Margin="0,0,0,12" IsVisible="False" />
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+            <Button Content="Cancel" Classes="secondary" Click="Cancel_Click" />
+            <Button Content="Save" Classes="primary" Click="Save_Click" />
+        </StackPanel>
+    </StackPanel>
+</Window>

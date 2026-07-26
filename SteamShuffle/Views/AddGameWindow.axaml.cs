@@ -1,11 +1,12 @@
-using System.Windows;
-using System.Windows.Input;
+using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Interactivity;
 using SteamShuffle.ApiClients;
 using SteamShuffle.CoreModels;
 
 namespace SteamShuffle.Views;
 
-public partial class AddGameWindow
+public partial class AddGameWindow : Window
 {
     private readonly SteamStoreService _storeService;
 
@@ -15,10 +16,10 @@ public partial class AddGameWindow
     {
         InitializeComponent();
         _storeService = storeService;
-        Loaded += (_, _) => SearchBox.Focus();
+        Opened += (_, _) => SearchBox.Focus();
     }
 
-    private void SearchBox_KeyDown(object sender, KeyEventArgs e)
+    private void SearchBox_KeyDown(object? sender, KeyEventArgs e)
     {
         if (e.Key == Key.Enter)
         {
@@ -26,15 +27,14 @@ public partial class AddGameWindow
         }
     }
 
-    // ReSharper disable once AsyncVoidEventHandlerMethod
-    private async void Search_Click(object sender, RoutedEventArgs e)
+    private async void Search_Click(object? sender, RoutedEventArgs e)
     {
         await RunSearchAsync();
     }
 
     private async Task RunSearchAsync()
     {
-        var term = SearchBox.Text.Trim();
+        var term = (SearchBox.Text ?? string.Empty).Trim();
         if (term.Length == 0)
         {
             return;
@@ -54,7 +54,7 @@ public partial class AddGameWindow
         catch (Exception ex)
         {
             StatusText.Text = "Search failed.";
-            MessageBox.Show(this, ex.Message, "Search failed", MessageBoxButton.OK, MessageBoxImage.Error);
+            await MessageWindow.ShowAsync(this, "Search failed", ex.Message);
         }
         finally
         {
@@ -62,12 +62,12 @@ public partial class AddGameWindow
         }
     }
 
-    private void ResultsList_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    private void ResultsList_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         AddButton.IsEnabled = ResultsList.SelectedItem is StoreSearchResult;
     }
 
-    private void Add_Click(object sender, RoutedEventArgs e)
+    private void Add_Click(object? sender, RoutedEventArgs e)
     {
         if (ResultsList.SelectedItem is not StoreSearchResult selected)
         {
@@ -75,13 +75,8 @@ public partial class AddGameWindow
         }
 
         SelectedResult = selected;
-        DialogResult = true;
-        Close();
+        Close(true);
     }
 
-    private void Cancel_Click(object sender, RoutedEventArgs e)
-    {
-        DialogResult = false;
-        Close();
-    }
+    private void Cancel_Click(object? sender, RoutedEventArgs e) => Close(false);
 }

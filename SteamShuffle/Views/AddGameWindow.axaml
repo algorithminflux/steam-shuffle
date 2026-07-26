@@ -1,0 +1,36 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:models="clr-namespace:SteamShuffle.CoreModels;assembly=SteamShuffle.CoreModels"
+        x:Class="SteamShuffle.Views.AddGameWindow"
+        Title="Add Game"
+        Width="440" Height="520"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource BackgroundBrush}">
+    <Grid Margin="20" RowDefinitions="Auto,Auto,Auto,*,Auto">
+        <TextBlock Text="Add Game Manually" FontSize="18" FontWeight="Bold" Grid.Row="0" Margin="0,0,0,4" />
+        <TextBlock Text="For games your Steam Web API key can't see (e.g. Family Share)." Grid.Row="1"
+                   Foreground="{StaticResource MutedTextBrush}" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,12" />
+
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0,0,0,10">
+            <TextBox Name="SearchBox" Grid.Column="0" Margin="0,0,8,0" Watermark="Search by game name..." KeyDown="SearchBox_KeyDown" />
+            <Button Name="SearchButton" Grid.Column="1" Content="Search" Classes="secondary" Padding="10,6" Click="Search_Click" />
+        </Grid>
+
+        <ListBox Name="ResultsList" Grid.Row="3" Background="{StaticResource PanelBrush}"
+                 BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                 SelectionChanged="ResultsList_SelectionChanged">
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="models:StoreSearchResult">
+                    <TextBlock Text="{Binding Name}" />
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0" Spacing="8">
+            <TextBlock Name="StatusText" Foreground="{StaticResource MutedTextBrush}" FontSize="11"
+                       VerticalAlignment="Center" Margin="0,0,8,0" />
+            <Button Content="Cancel" Classes="secondary" Click="Cancel_Click" />
+            <Button Name="AddButton" Content="Add" Classes="primary" IsEnabled="False" Click="Add_Click" />
+        </StackPanel>
+    </Grid>
+</Window>

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <IsPackable>false</IsPackable>
@@ -15,7 +15,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SteamShuffle\SteamShuffle.csproj" />
     <ProjectReference Include="..\SteamShuffle.ApiClients\SteamShuffle.ApiClients.csproj" />
     <ProjectReference Include="..\SteamShuffle.CoreModels\SteamShuffle.CoreModels.csproj" />
     <ProjectReference Include="..\SteamShuffle.Infrastructure\SteamShuffle.Infrastructure.csproj" />

@@ -1,13 +1,18 @@
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Media.Imaging;
+using Avalonia;
+using Avalonia.Animation;
+using Avalonia.Animation.Easings;
+using Avalonia.Controls;
+using Avalonia.Controls.Shapes;
+using Avalonia.Layout;
+using Avalonia.Media;
+using Avalonia.Media.Imaging;
+using Avalonia.Styling;
+using Avalonia.Threading;
 using SteamShuffle.CoreModels;
 
 namespace SteamShuffle.Controls;
 
-public partial class SlotReelControl
+public partial class SlotReelControl : UserControl
 {
     private const double SlotWidth = 220;   // total width reserved per reel item, including margin
     private const double ItemWidth = 200;
@@ -19,22 +24,27 @@ public partial class SlotReelControl
 
     private static readonly Random Rng = new();
 
-    public event EventHandler<SteamGame>? SpinCompleted;
+    // Reused across all cover-art downloads for this control; a fresh HttpClient
+    // per image would exhaust sockets under heavy use.
+    private static readonly System.Net.Http.HttpClient ImageHttp = new();
+
+    private readonly TranslateTransform _reelTransform = new();
 
     public SlotReelControl()
     {
         InitializeComponent();
+        ReelStrip.RenderTransform = _reelTransform;
     }
 
     /// <summary>
     /// Spins the reel through a shuffled sequence of <paramref name="pool"/> and
     /// eases to a stop on <paramref name="winner"/>, centered under the pointer.
     /// </summary>
-    public void Spin(IReadOnlyList<SteamGame> pool, SteamGame winner)
+    public async Task<SteamGame> SpinAsync(IReadOnlyList<SteamGame> pool, SteamGame winner)
     {
         if (pool.Count == 0)
         {
-            return;
+            return winner;
         }
 
         ReelStrip.Children.Clear();
@@ -55,26 +65,30 @@ public partial class SlotReelControl
         foreach (var game in sequence)
             ReelStrip.Children.Add(BuildReelItem(game));
 
-        ReelStrip.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
-
-        double viewportWidth = ReelClip.ActualWidth > 0 ? ReelClip.ActualWidth : ActualWidth;
+        double viewportWidth = ReelClip.Bounds.Width > 0 ? ReelClip.Bounds.Width : Bounds.Width;
         double centerOffset = viewportWidth / 2 - ItemWidth / 2;
-
-        // Start position: first item roughly under the pointer.
-        ReelTransform.X = centerOffset;
-
         double targetX = centerOffset - winnerIndex * SlotWidth;
 
-        var animation = new DoubleAnimation
+        _reelTransform.X = centerOffset;
+
+        // Avalonia's Animation.RunAsync returns a Task directly; no
+        // Completed-event subscribe/unsubscribe dance like WPF's Storyboard needed.
+        var animation = new Animation
         {
-            From = centerOffset,
-            To = targetX,
             Duration = TimeSpan.FromSeconds(3.6),
-            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
+            Easing = new CubicEaseOut(),
+            FillMode = FillMode.Forward,
+            Children =
+            {
+                new KeyFrame { Cue = new Cue(0d), Setters = { new Setter(TranslateTransform.XProperty, centerOffset) } },
+                new KeyFrame { Cue = new Cue(1d), Setters = { new Setter(TranslateTransform.XProperty, targetX) } },
+            },
         };
 
-        animation.Completed += (_, _) => SpinCompleted?.Invoke(this, winner);
-        ReelTransform.BeginAnimation(TranslateTransform.XProperty, animation);
+        await animation.RunAsync(_reelTransform);
+        _reelTransform.X = targetX; // belt-and-braces; FillMode.Forward should already leave it here
+
+        return winner;
     }
 
     private static Border BuildReelItem(SteamGame game)
@@ -87,7 +101,7 @@ public partial class SlotReelControl
             Text = game.Name,
             Foreground = Brushes.White,
             FontSize = 13,
-            FontWeight = FontWeights.SemiBold,
+            FontWeight = FontWeight.SemiBold,
             TextAlignment = TextAlignment.Center,
             TextWrapping = TextWrapping.Wrap,
             VerticalAlignment = VerticalAlignment.Center,
@@ -101,24 +115,7 @@ public partial class SlotReelControl
             Stretch = Stretch.UniformToFill,
         };
 
-        bool triedHeaderFallback = false;
-        image.ImageFailed += (_, _) =>
-        {
-            if (triedHeaderFallback || string.IsNullOrWhiteSpace(game.HeaderImageUrl))
-            {
-                image.Source = null;
-                return;
-            }
-
-            triedHeaderFallback = true;
-            // The header image is a wide landscape banner, not the tall capsule
-            // art the tile is sized for — UniformToFill would zoom in and crop
-            // most of it away, so fit it in full (letterboxed) instead.
-            image.Stretch = Stretch.Uniform;
-            TrySetSource(image, game.HeaderImageUrl);
-        };
-
-        TrySetSource(image, game.CapsuleImageUrl);
+        _ = LoadCoverArtAsync(image, game);
 
         var grid = new Grid { Width = ItemWidth, Height = ItemHeight };
         grid.Children.Add(nameFallback);
@@ -132,27 +129,56 @@ public partial class SlotReelControl
             CornerRadius = new CornerRadius(6),
             ClipToBounds = true,
             Background = new SolidColorBrush(Color.FromRgb(40, 44, 54)),
-            ToolTip = game.Name,
+            [ToolTip.TipProperty] = game.Name,
             Child = grid,
         };
     }
 
-    private static void TrySetSource(Image image, string? url)
+    /// <summary>
+    /// Avalonia's Bitmap only loads from a Stream (WPF's BitmapImage could just be
+    /// pointed at a Uri and it handled the async fetch itself), so cover art is
+    /// fetched by hand here. Falls back to the store's wide header banner
+    /// (letterboxed via Stretch.Uniform, since it isn't cut for a tall capsule
+    /// slot) if the capsule art itself fails to load.
+    /// </summary>
+    private static async Task LoadCoverArtAsync(Image image, SteamGame game)
+    {
+        if (await TrySetSourceAsync(image, game.CapsuleImageUrl, Stretch.UniformToFill))
+        {
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(game.HeaderImageUrl))
+        {
+            await TrySetSourceAsync(image, game.HeaderImageUrl, Stretch.Uniform);
+        }
+    }
+
+    private static async Task<bool> TrySetSourceAsync(Image image, string? url, Stretch stretch)
     {
         if (string.IsNullOrWhiteSpace(url))
         {
-            image.Source = null;
-            return;
+            return false;
         }
 
         try
         {
-            image.Source = new BitmapImage(new Uri(url));
+            using var stream = await ImageHttp.GetStreamAsync(url);
+            var bitmap = new Bitmap(stream);
+
+            // Bitmap decoding can happen off-thread, but Image.Source must be
+            // assigned on the UI thread.
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                image.Stretch = stretch;
+                image.Source = bitmap;
+            });
+            return true;
         }
         catch
         {
             // Missing/broken art shouldn't crash the spin — leave it blank.
-            image.Source = null;
+            return false;
         }
     }
 

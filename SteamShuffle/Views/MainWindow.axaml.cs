@@ -1,15 +1,16 @@
 using System.Collections.ObjectModel;
 using System.Net.Http;
-using System.Windows;
+using Avalonia.Controls;
+using Avalonia.Interactivity;
+using Avalonia.Media.Imaging;
 using SteamShuffle.ApiClients;
 using SteamShuffle.CoreModels;
 using SteamShuffle.Infrastructure;
 using SteamShuffle.Services;
-using SteamShuffle.Views;
 
-namespace SteamShuffle;
+namespace SteamShuffle.Views;
 
-public partial class MainWindow
+public partial class MainWindow : Window
 {
     private readonly HttpClient _http = new();
     private readonly ICollectionRepository _repo = new CollectionRepository();
@@ -33,16 +34,18 @@ public partial class MainWindow
         _allGames = _repo.GetAllGames();
         ReloadCollections();
 
-        Loaded += MainWindow_Loaded;
+        // WPF used the Loaded event for post-construction async work; Avalonia's
+        // equivalent is Opened (Loaded also exists but fires on every visual-tree
+        // attach, which can be more often than wanted for one-time startup logic).
+        Opened += async (_, _) => await OnWindowOpenedAsync();
     }
 
-    // ReSharper disable once AsyncVoidEventHandlerMethod
-    private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
+    private async Task OnWindowOpenedAsync()
     {
         if (!_settings.IsConfigured)
         {
             StatusText.Text = "Welcome! Connect your Steam account to get started.";
-            OpenSettings();
+            await OpenSettingsAsync();
         }
 
         if (_settings.IsConfigured && _allGames.Count == 0)
@@ -62,53 +65,52 @@ public partial class MainWindow
             _collections.Add(c);
     }
 
-    private void CollectionsList_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    private void CollectionsList_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
-        ResultCard.Visibility = Visibility.Collapsed;
+        ResultCard.IsVisible = false;
     }
 
-    private void NewCollection_Click(object sender, RoutedEventArgs e)
+    private async void NewCollection_Click(object? sender, RoutedEventArgs e)
     {
-        var dialog = new SimplePromptWindow("New Collection", "Collection name:") { Owner = this };
-        if (dialog.ShowDialog() == true && !string.IsNullOrWhiteSpace(dialog.ResponseText))
+        var name = await SimplePromptWindow.AskAsync(this, "New Collection", "Collection name:");
+        if (name is null)
         {
-            var created = _repo.CreateCollection(dialog.ResponseText.Trim());
-            _collections.Add(created);
-            CollectionsList.SelectedItem = created;
+            return;
         }
+
+        var created = _repo.CreateCollection(name);
+        _collections.Add(created);
+        CollectionsList.SelectedItem = created;
     }
 
-    private void ManageCollection_Click(object sender, RoutedEventArgs e)
+    private async void ManageCollection_Click(object? sender, RoutedEventArgs e)
     {
         if (SelectedCollection is null)
         {
-            MessageBox.Show(this, "Select a collection first.", "Steam Shuffle", MessageBoxButton.OK, MessageBoxImage.Information);
+            await MessageWindow.ShowAsync(this, "Steam Shuffle", "Select a collection first.");
             return;
         }
 
         if (_allGames.Count == 0)
         {
-            MessageBox.Show(this, "Sync your library first so there are games to add.", "Steam Shuffle", MessageBoxButton.OK, MessageBoxImage.Information);
+            await MessageWindow.ShowAsync(this, "Steam Shuffle", "Sync your library first so there are games to add.");
             return;
         }
 
-        var manager = new CollectionManagerWindow(_repo, SelectedCollection, _allGames) { Owner = this };
-        manager.ShowDialog();
+        var manager = new CollectionManagerWindow(_repo, SelectedCollection, _allGames);
+        await manager.ShowDialog(this);
 
         // Refresh the AppIds/count shown in the sidebar for this collection.
-        var refreshed = _repo.GetCollections();
-        _collections.Clear();
-        foreach (var c in refreshed)
-            _collections.Add(c);
+        ReloadCollections();
     }
 
-    // ReSharper disable once AsyncVoidEventHandlerMethod
-    private async void AddGame_Click(object sender, RoutedEventArgs e)
+    private async void AddGame_Click(object? sender, RoutedEventArgs e)
     {
         var storeService = new SteamStoreService(_http, _settings.CountryCode);
-        var dialog = new AddGameWindow(storeService) { Owner = this };
+        var dialog = new AddGameWindow(storeService);
 
-        if (dialog.ShowDialog() != true || dialog.SelectedResult is not { } selected)
+        var added = await dialog.ShowDialog<bool>(this);
+        if (!added || dialog.SelectedResult is not { } selected)
         {
             return;
         }
@@ -130,28 +132,28 @@ public partial class MainWindow
         }
         catch (Exception ex)
         {
-            MessageBox.Show(this, ex.Message, "Add game failed", MessageBoxButton.OK, MessageBoxImage.Error);
+            await MessageWindow.ShowAsync(this, "Add game failed", ex.Message);
             StatusText.Text = $"{_allGames.Count} games cached locally.";
         }
     }
 
-    private void Settings_Click(object sender, RoutedEventArgs e) => OpenSettings();
+    private async void Settings_Click(object? sender, RoutedEventArgs e) => await OpenSettingsAsync();
 
-    private void OpenSettings()
+    private async Task OpenSettingsAsync()
     {
-        var dialog = new SettingsWindow(_settings) { Owner = this };
-        if (dialog.ShowDialog() == true)
+        var dialog = new SettingsWindow(_settings);
+        var saved = await dialog.ShowDialog<bool>(this);
+        if (saved)
         {
             _settings = dialog.Settings;
         }
     }
 
-    // ReSharper disable once AsyncVoidEventHandlerMethod
-    private async void Sync_Click(object sender, RoutedEventArgs e)
+    private async void Sync_Click(object? sender, RoutedEventArgs e)
     {
         if (!_settings.IsConfigured)
         {
-            OpenSettings();
+            await OpenSettingsAsync();
             if (!_settings.IsConfigured)
             {
                 return;
@@ -177,7 +179,7 @@ public partial class MainWindow
         catch (Exception ex)
         {
             StatusText.Text = "Sync failed.";
-            MessageBox.Show(this, ex.Message, "Sync failed", MessageBoxButton.OK, MessageBoxImage.Error);
+            await MessageWindow.ShowAsync(this, "Sync failed", ex.Message);
         }
         finally
         {
@@ -185,35 +187,33 @@ public partial class MainWindow
         }
     }
 
-    private void Spin_Click(object sender, RoutedEventArgs e)
+    private async void Spin_Click(object? sender, RoutedEventArgs e)
     {
         var collection = SelectedCollection;
         if (collection is null)
         {
-            MessageBox.Show(this, "Select a collection to spin from.", "Steam Shuffle", MessageBoxButton.OK, MessageBoxImage.Information);
+            await MessageWindow.ShowAsync(this, "Steam Shuffle", "Select a collection to spin from.");
             return;
         }
 
         var pool = _allGames.Where(g => collection.AppIds.Contains(g.AppId)).ToList();
         if (pool.Count == 0)
         {
-            MessageBox.Show(this, "This collection is empty. Add some games first via \"Manage\".", "Steam Shuffle", MessageBoxButton.OK, MessageBoxImage.Information);
+            await MessageWindow.ShowAsync(this, "Steam Shuffle", "This collection is empty. Add some games first via \"Manage\".");
             return;
         }
 
-        ResultCard.Visibility = Visibility.Collapsed;
+        ResultCard.IsVisible = false;
         SpinButton.IsEnabled = false;
 
         var winner = pool[_rng.Next(pool.Count)];
-        Reel.SpinCompleted += OnSpinCompletedOnce;
-        Reel.Spin(pool, winner);
 
-        void OnSpinCompletedOnce(object? s, SteamGame result)
-        {
-            Reel.SpinCompleted -= OnSpinCompletedOnce;
-            ShowResult(result);
-            SpinButton.IsEnabled = true;
-        }
+        // Cleanest improvement from the WPF port: no SpinCompleted event
+        // subscribe/unsubscribe dance -- just await the spin directly.
+        var result = await Reel.SpinAsync(pool, winner);
+        ShowResult(result);
+
+        SpinButton.IsEnabled = true;
     }
 
     private void ShowResult(SteamGame game)
@@ -226,15 +226,21 @@ public partial class MainWindow
         ResultLastPlayed.Text = game.LastPlayedDisplay;
         ResultTags.ItemsSource = game.Tags;
 
+        _ = LoadResultImageAsync(game.CapsuleImageUrl);
+
+        ResultCard.IsVisible = true;
+    }
+
+    private async Task LoadResultImageAsync(string url)
+    {
         try
         {
-            ResultImage.Source = new System.Windows.Media.Imaging.BitmapImage(new Uri(game.CapsuleImageUrl));
+            using var stream = await _http.GetStreamAsync(url);
+            ResultImage.Source = new Bitmap(stream);
         }
         catch
         {
             // Leave blank if art fails to load.
         }
-
-        ResultCard.Visibility = Visibility.Visible;
     }
 }

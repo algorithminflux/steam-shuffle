@@ -2,14 +2,30 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
-    <UseWPF>true</UseWPF>
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>SteamShuffle</AssemblyName>
     <RootNamespace>SteamShuffle</RootNamespace>
-    <!-- Optional: drop an .ico into Assets\ and set ApplicationIcon to Assets\app.ico -->
+
+    <!-- Avalonia's XAML compiler resolves x:Bind-style compiled bindings at build time. -->
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+
+    <!-- AVLN3001: AddGameWindow/CollectionManagerWindow take constructor args by design
+         (mirrors the WPF originals) and are only ever created via `new X(args)` in code,
+         never resolved through the avares:// XAML loader, so the warning doesn't apply. -->
+    <NoWarn>$(NoWarn);AVLN3001</NoWarn>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.1.3" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.1.3" />
+    <!-- Fluent is Avalonia's built-in modern theme; swap for Avalonia.Themes.Simple if you want to build every style from scratch. -->
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.1.3" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.1.3" />
+    <!-- Gives helpful design-time errors/previews in Rider/VS; safe to keep even outside a designer. -->
+    <PackageReference Include="Avalonia.Diagnostics" Version="11.1.3" Condition="'$(Configuration)' == 'Debug'" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\SteamShuffle.ApiClients\SteamShuffle.ApiClients.csproj" />
