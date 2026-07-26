@@ -5,9 +5,22 @@ that picks a random game from your own curated collections (pulled from your
 owned Steam library **and** your wishlist), with a slot-machine style reveal
 animation.
 
-## Demo
+## Screenshots
 
-[▶ Watch the demo](https://raw.githubusercontent.com/algorithminflux/steam-shuffle/main/docs/demo.mp4)
+<table>
+<tr>
+<td width="50%"><img src="docs/2026-07-26_before-spin.png" alt="Reel ready to spin"/><br/><sub>Ready to spin</sub></td>
+<td width="50%"><img src="docs/2026-07-26_after-spin.png" alt="Spin result with game details"/><br/><sub>Spin result</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/2026-07-26_manage-collection.png" alt="Manage Collection window"/><br/><sub>Manage a collection</sub></td>
+<td width="50%"><img src="docs/2026-07-26_manage-collection_selected-only.png" alt="Manage Collection window filtered to selected games only"/><br/><sub>"Selected only" filter</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/2026-07-26_add-game-manually.png" alt="Add Game Manually search dialog"/><br/><sub>Add a game manually (e.g. Family Share)</sub></td>
+<td width="50%"><img src="docs/2026-07-26_settings.png" alt="Settings window"/><br/><sub>Settings</sub></td>
+</tr>
+</table>
 
 ## Requirements
 
