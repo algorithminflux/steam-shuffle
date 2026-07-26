@@ -38,6 +38,24 @@ dotnet run --project SteamShuffle
 
 Or open `SteamShuffle.sln` in Visual Studio / Rider and hit Run.
 
+## Running a downloaded release
+
+Releases are self-contained single-file builds — no .NET install needed on
+the target machine, one file per platform:
+
+- **Windows**: unzip `SteamShuffle-<version>-win-x64.zip`, double-click
+  `SteamShuffle.exe`.
+- **Linux**: unzip `SteamShuffle-<version>-linux-x64.zip`, then
+  `./SteamShuffle` (the zip preserves the executable bit; if it still won't
+  run, `chmod +x SteamShuffle` first).
+- **macOS**: unzip `SteamShuffle-<version>-osx-arm64.zip`. The binary is
+  unsigned, so Gatekeeper will block it on first run — either right-click →
+  **Open** and confirm, or run
+  `xattr -d com.apple.quarantine SteamShuffle && ./SteamShuffle` in Terminal.
+
+Same one-time Settings setup applies (API key, SteamID64, region code) as
+running from source.
+
 ## Architecture
 
 The solution is split into layered projects (dependency rule flows one way,
