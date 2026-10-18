@@ -52,6 +52,24 @@
         <Style Selector="Button.secondary:pointerover">
             <Setter Property="Background" Value="#232834" />
         </Style>
+
+        <!-- Link-looking button; the URL goes in Tag and the click handler opens it. -->
+        <Style Selector="Button.link">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+        </Style>
+        <Style Selector="Button.link:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Opacity" Value="0.8" />
+        </Style>
+        <Style Selector="Button.link TextBlock">
+            <Setter Property="TextDecorations" Value="Underline" />
+        </Style>
     </Application.Styles>
 
 </Application>

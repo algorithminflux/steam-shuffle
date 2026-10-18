@@ -13,13 +13,22 @@
 
         <TextBlock Text="Steam Web API Key" Margin="0,0,0,4" />
         <TextBox Name="ApiKeyBox" Margin="0,0,0,4" />
-        <TextBlock Foreground="{StaticResource MutedTextBrush}" FontSize="11" Margin="0,0,0,16" TextWrapping="Wrap"
-                   Text="Get one free at steamcommunity.com/dev/apikey" />
+        <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,0,0,16">
+            <TextBlock Foreground="{StaticResource MutedTextBrush}" FontSize="11" Text="Get one free at" />
+            <Button Classes="link" Tag="https://steamcommunity.com/dev/apikey" Click="Link_Click">
+                <TextBlock Text="steamcommunity.com/dev/apikey" />
+            </Button>
+        </StackPanel>
 
         <TextBlock Text="SteamID64" Margin="0,0,0,4" />
         <TextBox Name="SteamIdBox" Margin="0,0,0,4" />
-        <TextBlock Foreground="{StaticResource MutedTextBrush}" FontSize="11" Margin="0,0,0,16" TextWrapping="Wrap"
-                   Text="Find yours at steamid.io by pasting your profile URL." />
+        <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,0,0,16">
+            <TextBlock Foreground="{StaticResource MutedTextBrush}" FontSize="11" Text="Find yours at" />
+            <Button Classes="link" Tag="https://steamid.io" Click="Link_Click">
+                <TextBlock Text="steamid.io" />
+            </Button>
+            <TextBlock Foreground="{StaticResource MutedTextBrush}" FontSize="11" Text="by pasting your profile URL." />
+        </StackPanel>
 
         <TextBlock Text="Store currency / region code" Margin="0,0,0,4" />
         <TextBox Name="CountryCodeBox" Margin="0,0,0,4" Width="80" HorizontalAlignment="Left" />

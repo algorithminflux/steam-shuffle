@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using SteamShuffle.CoreModels;
@@ -49,6 +50,25 @@ public partial class SettingsWindow : Window
         AppSettingsStore.Save(Settings);
 
         Close(true);
+    }
+
+    private void Link_Click(object? sender, RoutedEventArgs e)
+    {
+        // Only ever open the https URLs hard-coded in the XAML Tag.
+        if (sender is not Button { Tag: string { Length: > 0 } url } || !url.StartsWith("https://", StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        try
+        {
+            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+        }
+        catch (Exception)
+        {
+            ValidationText.Text = $"Couldn't open the browser. Open this address yourself: {url}";
+            ValidationText.IsVisible = true;
+        }
     }
 
     private void Cancel_Click(object? sender, RoutedEventArgs e) => Close(false);
